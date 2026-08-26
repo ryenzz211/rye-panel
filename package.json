@@ -1,46 +1,20 @@
 {
   "name": "rye-panel",
-  "version": "1.0.0",
-  "description": "Rye Panel — Multi WhatsApp Bot Management System",
+  "version": "1.0.1",
   "main": "backend/server.js",
   "type": "module",
-  "author": "Ryenz Developer",
-  "license": "UNLICENSED",
-  "private": true,
   "scripts": {
-    "start": "node backend/server.js",
-    "setup": "node scripts/setup.js",
-    "migrate": "node scripts/migrate.js"
+    "start": "node backend/server.js"
   },
   "engines": {
     "node": "18.x"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.5",
-    "bcrypt": "^5.1.1",
-    "chalk": "^4.1.2",
-    "chokidar": "^3.6.0",
-    "cors": "^2.8.5",
+    "express": "^4.18.2",
     "dotenv": "^16.4.5",
-    "ejs": "^3.1.10",
-    "express": "^4.18.3",
-    "express-session": "^1.18.0",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
     "fs-extra": "^11.2.0",
-    "helmet": "^7.1.0",
-    "joi": "^17.12.1",
-    "multer": "^1.4.5-lts.1",
-    "pino": "^8.19.0",
-    "pino-pretty": "^10.3.1",
-    "qrcode": "^1.5.3",
-    "adm-zip": "^0.5.12",
-    "sql.js": "^1.14.2",
-    "uuid": "^9.0.1",
-    "winston": "^3.11.0",
-    "ws": "^8.16.0",
-    "xss": "^1.0.15"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.0",
-    "nodemon": "^3.0.3"
+    "ejs": "^3.1.10"
   }
 }
