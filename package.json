@@ -9,14 +9,14 @@
   "private": true,
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
     "setup": "node scripts/setup.js",
-    "migrate": "node scripts/migrate.js",
-    "test": "node --test"
+    "migrate": "node scripts/migrate.js"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.5",
-    "sql.js": "^1.10.3",
     "bcrypt": "^5.1.1",
     "chalk": "^4.1.2",
     "chokidar": "^3.6.0",
@@ -41,8 +41,5 @@
   "devDependencies": {
     "@types/node": "^20.11.0",
     "nodemon": "^3.0.3"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
