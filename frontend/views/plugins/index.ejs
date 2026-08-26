@@ -1,0 +1,541 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="plugins-container">
+  <div class="plugins-header">
+    <div>
+      <h2><i class="fas fa-puzzle-piece"></i> Plugins</h2>
+      <p>Kelola plugin panel</p>
+    </div>
+    <button onclick="showInstallPlugin()" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Install Plugin
+    </button>
+  </div>
+
+  <div id="pluginsList" class="plugins-list">
+    <div class="loading">Loading plugins...</div>
+  </div>
+</div>
+
+<!-- Install Plugin Modal -->
+<div class="plugin-modal" id="installModal">
+  <div class="plugin-modal-content">
+    <div class="plugin-modal-header">
+      <h3>📦 Install Plugin</h3>
+      <button class="plugin-modal-close" onclick="closeInstallModal()">✕</button>
+    </div>
+    <div class="plugin-modal-body">
+      <div class="form-group">
+        <label>Plugin ID</label>
+        <input type="text" id="pluginId" placeholder="my-plugin" style="font-family:monospace;">
+        <small>Nama unik untuk plugin (huruf kecil, angka, dan -)</small>
+      </div>
+      <div class="form-group">
+        <label>Source (optional)</label>
+        <input type="text" id="pluginSource" placeholder="/path/to/plugin or git url" style="font-family:monospace;">
+        <small>Kosongkan untuk membuat plugin template</small>
+      </div>
+    </div>
+    <div class="plugin-modal-footer">
+      <button onclick="closeInstallModal()" class="btn btn-secondary">Cancel</button>
+      <button onclick="installPlugin()" class="btn btn-primary">📦 Install</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .plugins-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 60px auto 0 0;
+  }
+
+  .plugins-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .plugins-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .plugins-header h2 i {
+    color: #6c63ff;
+  }
+
+  .plugins-header p {
+    color: var(--text-secondary, #888);
+    margin: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #6c63ff;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #5a52e0;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-color, #fff);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+  }
+
+  .btn-success {
+    background: #22c55e;
+    color: #fff;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .plugins-list {
+    background: var(--bg-card, rgba(255,255,255,0.04));
+    border-radius: 12px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    overflow: hidden;
+    min-height: 200px;
+  }
+
+  .plugin-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.04));
+  }
+
+  .plugin-item:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .plugin-item .plugin-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+  }
+
+  .plugin-item .plugin-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(108,99,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #6c63ff;
+  }
+
+  .plugin-item .plugin-details {
+    flex: 1;
+  }
+
+  .plugin-item .plugin-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-color, #fff);
+  }
+
+  .plugin-item .plugin-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary, #888);
+  }
+
+  .plugin-item .plugin-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .plugin-item .plugin-version {
+    font-size: 0.65rem;
+    color: #666;
+    background: rgba(255,255,255,0.05);
+    padding: 2px 10px;
+    border-radius: 20px;
+  }
+
+  .plugin-item .plugin-status {
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 20px;
+  }
+
+  .plugin-item .plugin-status.enabled {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+  }
+
+  .plugin-item .plugin-status.disabled {
+    background: rgba(107,114,128,0.15);
+    color: #6b7280;
+  }
+
+  .plugin-item .plugin-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .plugin-item .plugin-actions button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+  }
+
+  .plugin-item .plugin-actions button:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary, #888);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary, #888);
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: #6c63ff;
+    margin-bottom: 10px;
+  }
+
+  /* Modal */
+  .plugin-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .plugin-modal.active {
+    display: flex;
+  }
+
+  .plugin-modal-content {
+    background: var(--bg-card, #1a1a2e);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid var(--border-color, rgba(108,99,255,0.15));
+    overflow: hidden;
+  }
+
+  .plugin-modal-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+  }
+
+  .plugin-modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .plugin-modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+
+  .plugin-modal-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+  }
+
+  .plugin-modal-body {
+    padding: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: var(--text-secondary, #aaa);
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+    background: var(--bg-input, rgba(255,255,255,0.05));
+    color: var(--text-color, #fff);
+    font-size: 0.95rem;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #6c63ff;
+  }
+
+  .form-group small {
+    display: block;
+    color: #666;
+    font-size: 0.7rem;
+    margin-top: 4px;
+  }
+
+  .plugin-modal-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.06));
+  }
+
+  @media (min-width: 1024px) {
+    .plugins-container { margin-left: 0; }
+  }
+
+  @media (max-width: 768px) {
+    .plugins-container { padding: 10px; margin: 60px 10px 0; }
+    .plugin-item { flex-direction: column; align-items: stretch; gap: 8px; }
+    .plugin-item .plugin-meta { justify-content: flex-start; }
+    .plugin-modal-content { width: 95%; }
+  }
+</style>
+
+<script>
+  // ============ LOAD PLUGINS ============
+  async function loadPlugins() {
+    try {
+      const res = await fetch('/api/plugins');
+      const data = await res.json();
+
+      const container = document.getElementById('pluginsList');
+
+      if (!data.success) {
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error: ${data.message}</div>`;
+        return;
+      }
+
+      const plugins = data.data || [];
+
+      if (plugins.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-puzzle-piece"></i>
+            <p>Belum ada plugin terinstall</p>
+            <button onclick="showInstallPlugin()" class="btn btn-primary" style="margin-top:10px;">
+              <i class="fas fa-plus"></i> Install Plugin
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      for (const plugin of plugins) {
+        const statusClass = plugin.enabled !== false ? 'enabled' : 'disabled';
+        const statusText = plugin.enabled !== false ? 'Enabled' : 'Disabled';
+
+        html += `
+          <div class="plugin-item">
+            <div class="plugin-info">
+              <div class="plugin-icon">🧩</div>
+              <div class="plugin-details">
+                <div class="plugin-name">${plugin.name || plugin.id}</div>
+                <div class="plugin-desc">${plugin.description || 'No description'}</div>
+                <div style="display:flex;gap:8px;font-size:0.7rem;color:#666;margin-top:2px;">
+                  <span>by ${plugin.author || 'Unknown'}</span>
+                  <span>•</span>
+                  <span>v${plugin.version || '1.0.0'}</span>
+                  <span>•</span>
+                  <span>${plugin.id}</span>
+                </div>
+              </div>
+            </div>
+            <div class="plugin-meta">
+              <span class="plugin-status ${statusClass}">${statusText}</span>
+              <div class="plugin-actions">
+                <button onclick="togglePlugin('${plugin.id}')" title="Toggle">
+                  ${plugin.enabled !== false ? '⏸️' : '▶️'}
+                </button>
+                <button onclick="uninstallPlugin('${plugin.id}')" class="danger" title="Uninstall">🗑️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    } catch (error) {
+      document.getElementById('pluginsList').innerHTML = `
+        <div class="empty-state" style="color:#ef4444;">Error: ${error.message}</div>
+      `;
+    }
+  }
+
+  // ============ INSTALL PLUGIN ============
+  function showInstallPlugin() {
+    document.getElementById('pluginId').value = '';
+    document.getElementById('pluginSource').value = '';
+    document.getElementById('installModal').classList.add('active');
+  }
+
+  function closeInstallModal() {
+    document.getElementById('installModal').classList.remove('active');
+  }
+
+  async function installPlugin() {
+    const pluginId = document.getElementById('pluginId').value.trim();
+    const source = document.getElementById('pluginSource').value.trim();
+
+    if (!pluginId) {
+      alert('Plugin ID wajib diisi!');
+      return;
+    }
+
+    if (!/^[a-z0-9-]+$/.test(pluginId)) {
+      alert('Plugin ID hanya boleh huruf kecil, angka, dan -');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/plugins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pluginId, source: source || undefined })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Plugin berhasil diinstall!');
+        closeInstallModal();
+        loadPlugins();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  // ============ TOGGLE PLUGIN ============
+  async function togglePlugin(pluginId) {
+    const current = document.querySelector(`[data-plugin="${pluginId}"]`);
+    try {
+      const res = await fetch(`/api/plugins/${pluginId}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: true })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        loadPlugins();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  // ============ UNINSTALL PLUGIN ============
+  async function uninstallPlugin(pluginId) {
+    if (!confirm(`Hapus plugin "${pluginId}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/plugins/${pluginId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Plugin berhasil diuninstall!');
+        loadPlugins();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  // ============ CLOSE MODALS ============
+  document.getElementById('installModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('installModal')) {
+      closeInstallModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeInstallModal();
+    }
+  });
+
+  // ============ INIT ============
+  loadPlugins();
+</script>

@@ -1,0 +1,290 @@
+<%- include('../partials/header.ejs') %>
+
+<div class="import-container">
+  <div class="import-card">
+    <h1><i class="fas fa-upload"></i> Import Bot</h1>
+    <p>Upload ZIP file bot WhatsApp</p>
+
+    <div class="upload-area" id="uploadArea">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p>Drag & drop atau klik untuk upload</p>
+      <small>Max 200MB, format .zip</small>
+      <input type="file" id="fileInput" accept=".zip" style="display:none">
+    </div>
+
+    <div id="uploadProgress" style="display:none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p id="progressText">Uploading...</p>
+    </div>
+
+    <div id="scanResult" style="display:none;">
+      <h3>📦 Hasil Scan</h3>
+      <div id="scanInfo"></div>
+      <div id="fileTree" style="background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;font-family:monospace;font-size:0.8rem;max-height:200px;overflow-y:auto;margin:15px 0;"></div>
+      
+      <hr>
+      <h3>⚙️ Konfigurasi</h3>
+      <form id="importForm">
+        <div class="form-group">
+          <label>Nama Bot *</label>
+          <input type="text" id="botName" placeholder="My WhatsApp Bot">
+        </div>
+        <div class="form-group">
+          <label>Entry File</label>
+          <input type="text" id="entryFile" placeholder="index.js">
+        </div>
+        <div class="form-group">
+          <label>Prefix</label>
+          <input type="text" id="prefix" value=".">
+        </div>
+        <div class="form-group">
+          <label>Nomor WhatsApp</label>
+          <input type="text" id="phoneNumber" placeholder="628xxxxxxxxxx">
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-check"></i> Import Bot
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs') %>
+
+<style>
+  .import-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 80px auto 0;
+  }
+  .import-card {
+    background: rgba(255,255,255,0.04);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .import-card h1 { font-size: 1.5rem; margin-bottom: 5px; }
+  .import-card p { color: #888; margin-bottom: 25px; }
+  .upload-area {
+    border: 2px dashed rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 50px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .upload-area:hover { border-color: #6c63ff; background: rgba(108,99,255,0.05); }
+  .upload-area i { font-size: 3rem; color: #6c63ff; }
+  .upload-area small { display: block; color: #666; margin-top: 8px; }
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 15px 0;
+  }
+  .progress-fill { height: 100%; background: #6c63ff; width: 0%; transition: width 0.3s; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 5px; }
+  .form-group input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    font-size: 0.95rem;
+  }
+  .form-group input:focus { outline: none; border-color: #6c63ff; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-primary { background: #6c63ff; color: #fff; width: 100%; justify-content: center; }
+  .btn-primary:hover { background: #5a52e0; }
+  #scanInfo {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+  }
+  #scanInfo .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.9rem;
+  }
+  #scanInfo .info-row span:last-child { color: #ccc; }
+  .file-tree-item { padding: 1px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-tree-folder { color: #f59e0b; }
+  .file-tree-file { color: #6b7280; }
+  hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 25px 0; }
+  @media (max-width: 768px) {
+    .import-container { margin: 70px 15px 0; padding: 10px; }
+    .import-card { padding: 20px; }
+  }
+</style>
+
+<script>
+  let tempId = null;
+  console.log('[Import] Page loaded');
+
+  document.getElementById('uploadArea').addEventListener('click', () => {
+    document.getElementById('fileInput').click();
+  });
+
+  const uploadArea = document.getElementById('uploadArea');
+  uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = '#6c63ff'; });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'rgba(255,255,255,0.15)'; });
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'rgba(255,255,255,0.15)';
+    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+  });
+
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleFile(e.target.files[0]);
+  });
+
+  async function handleFile(file) {
+    console.log('[Import] File:', file.name, file.size);
+    if (!file.name.endsWith('.zip')) { alert('Hanya file ZIP!'); return; }
+    if (file.size > 200 * 1024 * 1024) { alert('Max 200MB!'); return; }
+
+    const formData = new FormData();
+    formData.append('zip', file);
+
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('progressFill').style.width = '30%';
+    document.getElementById('progressText').textContent = 'Uploading...';
+
+    try {
+      const res = await fetch('/api/import/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      console.log('[Import] Upload:', data);
+
+      if (!data.success) { alert('Upload gagal: ' + data.message); document.getElementById('uploadProgress').style.display = 'none'; return; }
+
+      tempId = data.data.tempId;
+      document.getElementById('progressFill').style.width = '70%';
+      document.getElementById('progressText').textContent = '✅ Scanning...';
+      await scanZip(tempId);
+    } catch (error) {
+      console.error('[Import] Upload error:', error);
+      alert('Error: ' + error.message);
+      document.getElementById('uploadProgress').style.display = 'none';
+    }
+  }
+
+  async function scanZip(tempId) {
+    console.log('[Import] Scanning:', tempId);
+    try {
+      const res = await fetch('/api/import/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempId })
+      });
+      const data = await res.json();
+      console.log('[Import] Scan:', data);
+
+      if (!data.success) { alert('Scan gagal: ' + data.message); document.getElementById('uploadProgress').style.display = 'none'; return; }
+
+      const result = data.data;
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressText').textContent = '✅ Selesai!';
+
+      setTimeout(() => {
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('uploadProgress').style.display = 'none';
+      }, 300);
+
+      // Tampilkan info scan
+      const sizeDisplay = result.size > 1024 * 1024 
+        ? (result.size / 1024 / 1024).toFixed(1) + ' MB'
+        : (result.size / 1024).toFixed(1) + ' KB';
+      
+      document.getElementById('scanInfo').innerHTML = `
+        <div class="info-row"><span>📦 File count</span><span>${result.fileCount}</span></div>
+        <div class="info-row"><span>📏 Size</span><span>${sizeDisplay}</span></div>
+        <div class="info-row"><span>📄 package.json</span><span>${result.packageJson ? '✅ Found (' + result.packageJson.name + ')' : '❌ Not found'}</span></div>
+        <div class="info-row"><span>📁 Entry files</span><span>${result.detectedEntry.join(', ') || 'None detected'}</span></div>
+        <div class="info-row"><span>📂 Commands folder</span><span>${result.folders.commands ? '✅' : '❌'}</span></div>
+        <div class="info-row"><span>📂 Events folder</span><span>${result.folders.events ? '✅' : '❌'}</span></div>
+        <div class="info-row"><span>📂 Session folder</span><span>${result.folders.session ? '✅' : '❌'}</span></div>
+      `;
+
+      if (result.detectedEntry.length > 0) {
+        document.getElementById('entryFile').value = result.detectedEntry[0];
+      }
+      if (result.packageJson && result.packageJson.name) {
+        document.getElementById('botName').value = result.packageJson.name;
+      } else {
+        document.getElementById('botName').value = 'Imported Bot';
+      }
+
+      // File tree
+      let treeHtml = '';
+      for (const item of result.structure) {
+        const icon = item.type === 'folder' ? '📁' : '📄';
+        const cls = item.type === 'folder' ? 'file-tree-folder' : 'file-tree-file';
+        const size = item.type === 'file' ? ` (${(item.size/1024).toFixed(1)}KB)` : '';
+        treeHtml += `<div class="file-tree-item ${cls}">${icon} ${item.name}${item.type === 'folder' ? '/' : ''}${size}</div>`;
+        if (item.children) {
+          for (const child of item.children) {
+            const icon2 = child.type === 'folder' ? '📁' : '📄';
+            const cls2 = child.type === 'folder' ? 'file-tree-folder' : 'file-tree-file';
+            const size2 = child.type === 'file' ? ` (${(child.size/1024).toFixed(1)}KB)` : '';
+            treeHtml += `<div class="file-tree-item ${cls2}" style="padding-left:20px;">${icon2} ${child.name}${child.type === 'folder' ? '/' : ''}${size2}</div>`;
+          }
+        }
+      }
+      document.getElementById('fileTree').innerHTML = treeHtml;
+
+    } catch (error) {
+      console.error('[Import] Scan error:', error);
+      alert('Error: ' + error.message);
+      document.getElementById('uploadProgress').style.display = 'none';
+    }
+  }
+
+  document.getElementById('importForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tempId) { alert('Upload ZIP dulu!'); return; }
+
+    const config = {
+      name: document.getElementById('botName').value,
+      entry_file: document.getElementById('entryFile').value,
+      prefix: document.getElementById('prefix').value,
+      phone_number: document.getElementById('phoneNumber').value || null
+    };
+    if (!config.name) { alert('Nama bot wajib diisi!'); return; }
+
+    try {
+      const res = await fetch('/api/import/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tempId, config })
+      });
+      const data = await res.json();
+      console.log('[Import] Confirm:', data);
+      if (data.success) {
+        alert('✅ Bot berhasil diimport!');
+        window.location.href = '/bots';
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  });
+</script>

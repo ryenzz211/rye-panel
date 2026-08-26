@@ -1,0 +1,721 @@
+<%- include('../partials/header.ejs') %>
+
+<div class="bots-container">
+  <div class="bots-header">
+    <div>
+      <h1>🤖 Bot Management</h1>
+      <p>Kelola semua WhatsApp bot di panel ini</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/bots/create" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Bot</a>
+      <a href="/bots/import" class="btn btn-secondary"><i class="fas fa-upload"></i> Import ZIP</a>
+    </div>
+  </div>
+
+  <div id="bots-list">
+    <div class="loading">Loading bots...</div>
+  </div>
+</div>
+
+<!-- Terminal Modal -->
+<div class="terminal-modal" id="terminalModal">
+  <div class="terminal-modal-content">
+    <div class="terminal-modal-header">
+      <div><span style="font-weight:600;"><i class="fas fa-terminal" style="color:#6c63ff;"></i> Terminal</span><span id="terminalBotName" style="color:#aaa;font-size:0.9rem;margin-left:10px;"></span></div>
+      <button class="terminal-modal-close" onclick="closeTerminal()">✕</button>
+    </div>
+    <div class="terminal-modal-body" id="terminalModalBody"><div class="terminal-line terminal-welcome">Connecting to terminal...</div></div>
+    <div class="terminal-modal-footer">
+      <span id="termStatus" style="color:#888;font-size:0.8rem;">● Disconnected</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="clearTerminalModal()" class="btn-term">Clear</button>
+        <button onclick="closeTerminal()" class="btn-term">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Session Modal -->
+<div class="session-modal" id="sessionModal">
+  <div class="session-modal-content">
+    <div class="session-modal-header"><h3><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Hapus Session</h3><button class="session-modal-close" onclick="closeSessionModal()">✕</button></div>
+    <div class="session-modal-body">
+      <p id="sessionModalText">Session WhatsApp bot ini akan dihapus.</p>
+      <p style="color:#f59e0b;font-weight:600;" id="sessionModalBot"></p>
+      <p style="color:#888;font-size:0.9rem;">Tindakan ini dapat membuat bot harus melakukan pairing ulang.</p>
+      <div class="session-countdown"><span id="countdownNumber">5</span><span>detik</span></div>
+    </div>
+    <div class="session-modal-footer">
+      <button class="btn btn-secondary" onclick="closeSessionModal()">Batal</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" disabled onclick="confirmDeleteSession()"><i class="fas fa-trash"></i> Hapus Session</button>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs') %>
+
+<style>
+  .bots-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 60px auto 0 0;
+  }
+  .bots-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .bots-header h1 { font-size: 1.8rem; font-weight: 700; margin:0; }
+  .bots-header p { color: var(--text-secondary, #888); margin: 0; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 10px; border: none;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .btn-primary { background: #6c63ff; color: #fff; }
+  .btn-primary:hover { background: #5a52e0; transform: translateY(-2px); }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-color, #fff); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+  .bots-grid { display: flex; flex-direction: column; gap: 20px; }
+
+  .bot-card {
+    background: var(--bg-card, rgba(30,30,50,0.85));
+    border-radius: 18px;
+    padding: 20px 24px;
+    border: 1px solid var(--border-color, rgba(108,99,255,0.15));
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .bot-card:hover {
+    background: var(--bg-card-hover, rgba(40,40,65,0.9));
+    transform: translateY(-3px);
+    border-color: rgba(108,99,255,0.4);
+    box-shadow: 0 8px 30px rgba(108,99,255,0.15);
+  }
+
+  .bot-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .bot-left { flex: 1; min-width: 200px; }
+
+  .bot-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-color, #fff);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .bot-name .badge {
+    font-size: 0.55rem;
+    font-weight: 600;
+    padding: 3px 14px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .badge.imported { background: rgba(245,158,11,0.25); color: #fbbf24; }
+  .badge.builtin { background: rgba(34,197,94,0.25); color: #34d399; }
+
+  .bot-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 6px;
+    color: var(--text-secondary, #aaa);
+  }
+  .bot-status .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  .bot-id {
+    font-size: 0.7rem;
+    color: #555;
+    font-family: monospace;
+    margin-top: 3px;
+  }
+
+  .bot-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+  }
+
+  .bot-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .bot-stats .stat-item {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  .bot-stats .stat-item .stat-num {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-color, #fff);
+  }
+  .bot-stats .stat-item .stat-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .bot-stats .stat-item .stat-num.ping-good { color: #22c55e; }
+  .bot-stats .stat-item .stat-num.ping-medium { color: #f59e0b; }
+  .bot-stats .stat-item .stat-num.ping-bad { color: #ef4444; }
+  .bot-stats .stat-item .stat-num.ping-stopped { color: #666; }
+
+  .bot-chart {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    min-height: 80px;
+    position: relative;
+  }
+
+  .bot-chart canvas {
+    width: 100% !important;
+    height: 80px !important;
+  }
+
+  .bot-chart .chart-label {
+    font-size: 0.6rem;
+    color: var(--text-secondary, #888);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .bot-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #fff;
+  }
+  .btn-sm:hover { opacity: 0.85; transform: scale(0.95); }
+
+  .btn-success { background: #22c55e; }
+  .btn-danger { background: #ef4444; }
+  .btn-warning { background: #f59e0b; }
+  .btn-info { background: #3b82f6; }
+  .btn-purple { background: #8b5cf6; }
+  .btn-ghost {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+  .loading { text-align: center; padding: 40px; color: var(--text-secondary, #888); }
+  .empty-state { text-align: center; padding: 80px 20px; color: #888; }
+  .empty-state i { font-size: 4rem; color: #6c63ff; margin-bottom: 15px; }
+  .empty-state h3 { color: var(--text-color, #fff); margin-bottom: 8px; }
+
+  /* MODALS */
+  .terminal-modal, .session-modal {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    z-index: 9999; align-items: center; justify-content: center;
+  }
+  .terminal-modal.active, .session-modal.active { display: flex; }
+
+  .terminal-modal-content {
+    background: #0d0d1a; border-radius: 20px;
+    width: 92%; max-width: 950px; max-height: 82vh;
+    border: 1px solid rgba(108,99,255,0.15);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .terminal-modal-header {
+    padding: 14px 20px; display: flex; justify-content: space-between;
+    align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03); flex-shrink: 0;
+  }
+  .terminal-modal-close {
+    background: none; border: none; color: #888;
+    font-size: 1.2rem; cursor: pointer; padding: 4px 10px;
+    border-radius: 8px;
+  }
+  .terminal-modal-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .terminal-modal-body {
+    padding: 16px 20px; font-family: 'Courier New', monospace;
+    font-size: 0.9rem; line-height: 1.7; min-height: 300px;
+    max-height: 50vh; overflow-y: auto; background: #08080f; flex: 1;
+  }
+  .terminal-modal-body .terminal-line {
+    padding: 1px 0; color: #c8d0dc;
+    white-space: pre-wrap; word-break: break-word;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .terminal-modal-body .timestamp { color: #4a5568; margin-right: 8px; font-size: 0.7rem; }
+  .terminal-modal-body .level-info { color: #60a5fa; }
+  .terminal-modal-body .level-error { color: #f87171; }
+  .terminal-modal-body .level-warn { color: #fbbf24; }
+  .terminal-modal-body .level-success { color: #34d399; }
+  .terminal-modal-body .level-message { color: #e2e8f0; }
+  .terminal-modal-footer {
+    padding: 10px 20px; display: flex; justify-content: space-between;
+    align-items: center; border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03); flex-shrink: 0;
+  }
+  .btn-term {
+    padding: 4px 14px; border-radius: 8px; border: none;
+    background: rgba(255,255,255,0.08); color: #ccc;
+    font-size: 0.75rem; cursor: pointer;
+  }
+
+  .session-modal-content {
+    background: #1a1a2e; border-radius: 20px;
+    width: 90%; max-width: 420px;
+    border: 1px solid rgba(239,68,68,0.2);
+    overflow: hidden;
+  }
+  .session-modal-header {
+    padding: 16px 20px; display: flex; justify-content: space-between;
+    align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(239,68,68,0.05);
+  }
+  .session-modal-header h3 { margin: 0; font-size: 1rem; color: #ef4444; }
+  .session-modal-body { padding: 20px; }
+  .session-modal-body p { margin: 6px 0; color: #ccc; }
+  .session-countdown {
+    text-align: center; padding: 15px 0; margin-top: 10px;
+    background: rgba(0,0,0,0.3); border-radius: 10px;
+  }
+  .session-countdown #countdownNumber {
+    font-size: 2.5rem; font-weight: 700; color: #f59e0b; display: block;
+  }
+  .session-countdown span { color: #888; font-size: 0.8rem; }
+  .session-modal-footer {
+    padding: 12px 20px; display: flex; justify-content: flex-end;
+    gap: 10px; border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .btn-danger { background: #ef4444; color: #fff; padding: 8px 18px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; }
+  .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; padding: 8px 18px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; }
+
+  @media (min-width: 1024px) { .bots-container { margin-left: 0; } }
+
+  @media (max-width: 768px) {
+    .bots-container { padding: 10px; margin: 60px 10px 0; }
+    .bot-top { flex-direction: column; }
+    .bot-stats-row { grid-template-columns: 1fr; }
+    .bot-stats { grid-template-columns: repeat(3, 1fr); }
+    .bot-actions { justify-content: center; }
+    .bots-header { flex-direction: column; align-items: stretch; }
+    .btn { justify-content: center; }
+    .bot-name { font-size: 1.1rem; }
+  }
+
+  @media (max-width: 480px) {
+    .bot-stats { grid-template-columns: repeat(2, 1fr); }
+    .bot-card { padding: 14px 16px; }
+    .bot-actions .btn-sm { font-size: 0.65rem; padding: 4px 10px; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  let terminalWs = null;
+  let terminalBotId = null;
+  let terminalReconnectAttempts = 0;
+  let terminalAutoScroll = true;
+  let terminalReconnectTimer = null;
+  let isTerminalOpen = false;
+  
+  const chartInstances = {};
+  const pingData = {};
+
+  // ============ GET REAL PING FROM API ============
+  async function fetchPingData() {
+    try {
+      const res = await fetch('/api/ping');
+      const data = await res.json();
+      if (!data.success) return {};
+      return data.data;
+    } catch (e) {
+      console.error('[Ping] Fetch error:', e);
+      return {};
+    }
+  }
+
+  // ============ LOAD BOTS ============
+  async function loadBots() {
+    try {
+      const res = await fetch('/api/bots');
+      const data = await res.json();
+      
+      const container = document.getElementById('bots-list');
+      
+      if (!data.success || data.data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-robot"></i>
+            <h3>Belum ada bot</h3>
+            <p>Buat bot baru atau import bot dari ZIP</p>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:15px;">
+              <a href="/bots/create" class="btn btn-primary"><i class="fas fa-plus"></i> Buat Bot</a>
+              <a href="/bots/import" class="btn btn-secondary"><i class="fas fa-upload"></i> Import ZIP</a>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // Get ping data
+      const pingDataAll = await fetchPingData();
+      
+      let html = '<div class="bots-grid">';
+      data.data.forEach(bot => {
+        const status = bot.realStatus || bot.status || 'stopped';
+        const statusColors = {
+          running: '#22c55e',
+          stopped: '#6b7280',
+          starting: '#f59e0b',
+          error: '#ef4444',
+          connecting: '#8b5cf6',
+          crashed: '#ef4444'
+        };
+        const color = statusColors[status] || '#6b7280';
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+        const typeBadge = bot.type === 'builtin' ? 'builtin' : 'imported';
+        const botName = (bot.display_name || bot.name).replace(/'/g, "\\'");
+        const uptime = bot.uptime || 0;
+        const uptimeStr = uptime > 3600 ? `${Math.floor(uptime/3600)}h ${Math.floor((uptime%3600)/60)}m` : uptime > 60 ? `${Math.floor(uptime/60)}m ${uptime%60}s` : `${uptime}s`;
+
+        // Get ping data
+        const pingInfo = pingDataAll[bot.id] || { ping: null, running: status === 'running' };
+        const ping = pingInfo.ping;
+        const isRunning = pingInfo.running;
+        
+        // Ping class
+        let pingClass = 'ping-stopped';
+        let pingDisplay = '—';
+        if (isRunning && ping !== null) {
+          pingDisplay = ping + 'ms';
+          pingClass = ping < 30 ? 'ping-good' : ping < 60 ? 'ping-medium' : 'ping-bad';
+        } else if (!isRunning) {
+          pingDisplay = '⏸️';
+        }
+
+        // Initialize ping history
+        if (!pingData[bot.id]) {
+          pingData[bot.id] = [];
+        }
+
+        html += `
+          <div class="bot-card" id="bot-card-${bot.id}">
+            <div class="bot-top">
+              <div class="bot-left">
+                <div class="bot-name">
+                  ${bot.display_name || bot.name}
+                  <span class="badge ${typeBadge}">${bot.type}</span>
+                </div>
+                <div class="bot-status">
+                  <span class="dot" style="background:${color}"></span>
+                  ${statusLabel}
+                  ${bot.pid ? `· PID: ${bot.pid}` : ''}
+                  <span style="color:#666;font-size:0.7rem;">ID: ${bot.id.substring(0,12)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bot-stats-row">
+              <div class="bot-stats">
+                <div class="stat-item">
+                  <div class="stat-num">${uptimeStr}</div>
+                  <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num ${pingClass}" id="ping-${bot.id}">${pingDisplay}</div>
+                  <div class="stat-label">Ping</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num" id="status-${bot.id}">${status === 'running' ? '✅' : '⏸️'}</div>
+                  <div class="stat-label">Status</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num">${bot.phone_number || '-'}</div>
+                  <div class="stat-label">Phone</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num">${bot.prefix || '.'}</div>
+                  <div class="stat-label">Prefix</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-num">${bot.auto_restart ? 'ON' : 'OFF'}</div>
+                  <div class="stat-label">Auto Restart</div>
+                </div>
+              </div>
+
+              <div class="bot-chart">
+                <span class="chart-label">📶 Ping / Heartbeat (Last 30s)</span>
+                <canvas id="chart-${bot.id}"></canvas>
+              </div>
+            </div>
+
+            <div class="bot-actions">
+              <button class="btn btn-success btn-sm" onclick="actionBot('${bot.id}','start')" title="Start"><i class="fas fa-play"></i> Start</button>
+              <button class="btn btn-warning btn-sm" onclick="actionBot('${bot.id}','stop')" title="Stop"><i class="fas fa-stop"></i> Stop</button>
+              <button class="btn btn-info btn-sm" onclick="actionBot('${bot.id}','restart')" title="Restart"><i class="fas fa-sync"></i> Restart</button>
+              <button class="btn btn-purple btn-sm" onclick="openTerminal('${bot.id}','${botName}')" title="Terminal"><i class="fas fa-terminal"></i> Terminal</button>
+              <button class="btn btn-purple btn-sm" onclick="openSessionModal('${bot.id}','${botName}')" title="Session"><i class="fas fa-wifi"></i> Session</button>
+              <button class="btn btn-ghost btn-sm" onclick="window.location.href='/bots/${bot.id}/files'" title="Files"><i class="fas fa-folder"></i> Files</button>
+              <button class="btn btn-ghost btn-sm" onclick="window.location.href='/bots/${bot.id}/env'" title="Env"><i class="fas fa-key"></i> Env</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteBot('${bot.id}','${botName}')" title="Delete"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+
+      // Init charts after DOM update
+      setTimeout(() => {
+        data.data.forEach(bot => {
+          initChart(bot.id);
+          // Pre-fill chart with initial data (flatline jika stopped)
+          const isRunning = bot.status === 'running' || bot.status === 'connecting';
+          const chart = chartInstances[bot.id];
+          if (chart) {
+            const initialData = Array(30).fill(isRunning ? 25 : null);
+            chart.data.datasets[0].data = initialData;
+            chart.update('none');
+          }
+        });
+      }, 300);
+
+    } catch (error) {
+      document.getElementById('bots-list').innerHTML = `
+        <div class="empty-state" style="color:#ef4444;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Gagal load bots</h3>
+          <p>${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  // ============ INIT CHART ============
+  function initChart(botId) {
+    const canvas = document.getElementById(`chart-${botId}`);
+    if (!canvas) return;
+
+    if (chartInstances[botId]) {
+      chartInstances[botId].destroy();
+      delete chartInstances[botId];
+    }
+
+    const ctx = canvas.getContext('2d');
+    
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array(30).fill(''),
+        datasets: [{
+          label: 'Ping (ms)',
+          data: Array(30).fill(null),
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34,197,94,0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 0,
+          spanGaps: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 120,
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#666', font: { size: 8 }, stepSize: 20 }
+          },
+          x: { grid: { display: false }, ticks: { display: false } }
+        },
+        animation: { duration: 200 }
+      }
+    });
+
+    chartInstances[botId] = chart;
+  }
+
+  // ============ UPDATE PING REAL-TIME ============
+  async function updateAllPings() {
+    try {
+      const pingDataAll = await fetchPingData();
+      
+      for (const [botId, info] of Object.entries(pingDataAll)) {
+        const ping = info.ping;
+        const isRunning = info.running;
+        const chart = chartInstances[botId];
+        
+        // Update ping display
+        const pingEl = document.getElementById(`ping-${botId}`);
+        if (pingEl) {
+          if (isRunning && ping !== null) {
+            pingEl.textContent = ping + 'ms';
+            pingEl.className = 'stat-num';
+            pingEl.classList.add(ping < 30 ? 'ping-good' : ping < 60 ? 'ping-medium' : 'ping-bad');
+          } else {
+            pingEl.textContent = '⏸️';
+            pingEl.className = 'stat-num ping-stopped';
+          }
+        }
+
+        // Update chart
+        if (chart) {
+          const data = chart.data.datasets[0].data;
+          // Push new ping or null if stopped
+          data.push(isRunning && ping !== null ? ping : null);
+          if (data.length > 30) data.shift();
+          chart.update('none');
+        }
+      }
+    } catch (e) {
+      console.error('[Ping] Update error:', e);
+    }
+  }
+
+  // ============ BOT ACTIONS ============
+  async function actionBot(id, action) {
+    try {
+      const res = await fetch(`/api/bots/${id}/${action}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        loadBots();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  // ============ DELETE BOT ============
+  async function deleteBot(botId, botName) {
+    if (!confirm(`Yakin ingin menghapus bot "${botName}"?`)) return;
+    try {
+      const res = await fetch(`/api/bots/${botId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) { alert('✅ Bot dihapus!'); loadBots(); } 
+      else { alert('❌ ' + data.message); }
+    } catch (error) { alert('❌ Error: ' + error.message); }
+  }
+
+  // ============ TERMINAL MODAL ============
+  function openTerminal(botId, botName) {
+    if (terminalWs) { terminalWs.close(); terminalWs = null; }
+    if (terminalReconnectTimer) { clearTimeout(terminalReconnectTimer); terminalReconnectTimer = null; }
+    terminalReconnectAttempts = 0; isTerminalOpen = true;
+    document.getElementById('terminalBotName').textContent = botName || botId.substring(0,12);
+    document.getElementById('terminalModalBody').innerHTML = `<div class="terminal-line terminal-welcome">🚀 Connecting to ${botName || botId}...</div>`;
+    document.getElementById('termStatus').textContent = '● Connecting...'; document.getElementById('termStatus').style.color = '#f59e0b';
+    document.getElementById('terminalModal').classList.add('active');
+    connectTerminalWebSocket(botId);
+  }
+
+  function closeTerminal() {
+    isTerminalOpen = false; document.getElementById('terminalModal').classList.remove('active');
+    if (terminalWs) { terminalWs.close(); terminalWs = null; }
+    if (terminalReconnectTimer) { clearTimeout(terminalReconnectTimer); terminalReconnectTimer = null; }
+    document.getElementById('termStatus').textContent = '● Disconnected'; document.getElementById('termStatus').style.color = '#ef4444';
+  }
+
+  function connectTerminalWebSocket(botId) {
+    if (terminalWs && terminalWs.readyState === terminalWs.OPEN) return;
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/terminal?botId=${botId}`;
+    terminalWs = new WebSocket(wsUrl);
+    terminalWs.onopen = () => { document.getElementById('termStatus').textContent = '● Online'; document.getElementById('termStatus').style.color = '#22c55e'; terminalReconnectAttempts = 0; addTerminalLine('Connected', 'success'); };
+    terminalWs.onmessage = (e) => { try { const d = JSON.parse(e.data); if(d.type==='log') addTerminalLine(d.data.message, d.data.level||'info'); else if(d.type==='ping' && terminalWs.readyState===terminalWs.OPEN) terminalWs.send(JSON.stringify({type:'pong'})); } catch(err){} };
+    terminalWs.onclose = () => { document.getElementById('termStatus').textContent = '● Disconnected'; document.getElementById('termStatus').style.color = '#ef4444'; if(isTerminalOpen && terminalReconnectAttempts<5){ terminalReconnectAttempts++; setTimeout(()=>connectTerminalWebSocket(botId), 3000); } };
+  }
+
+  function addTerminalLine(msg, lvl='info') {
+    const body = document.getElementById('terminalModalBody');
+    const line = document.createElement('div'); line.className='terminal-line';
+    line.innerHTML = `<span class="timestamp">[${new Date().toLocaleTimeString()}]</span><span class="level-${lvl}">[${lvl.toUpperCase()}]</span><span class="level-message">${msg}</span>`;
+    body.appendChild(line); body.scrollTop = body.scrollHeight;
+  }
+  function clearTerminalModal() { document.getElementById('terminalModalBody').innerHTML = ''; addTerminalLine('Terminal cleared', 'info'); }
+
+  // ============ SESSION MODAL ============
+  let sessionBotId = null, countdownInterval = null;
+  function openSessionModal(botId, botName) {
+    sessionBotId = botId; document.getElementById('sessionModalBot').textContent = 'Bot: ' + botName; document.getElementById('sessionModal').classList.add('active');
+    let count = 5; document.getElementById('countdownNumber').textContent = count; document.getElementById('confirmDeleteBtn').disabled = true;
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => { count--; if(count<=0){ clearInterval(countdownInterval); document.getElementById('countdownNumber').textContent='0'; document.getElementById('confirmDeleteBtn').disabled=false; } else { document.getElementById('countdownNumber').textContent=count; } }, 1000);
+  }
+  function closeSessionModal() { document.getElementById('sessionModal').classList.remove('active'); if(countdownInterval){ clearInterval(countdownInterval); countdownInterval=null; } document.getElementById('confirmDeleteBtn').disabled=true; }
+  async function confirmDeleteSession() {
+    if(!sessionBotId) return;
+    try { const res = await fetch(`/api/sessions/${sessionBotId}`, { method:'DELETE' }); const data = await res.json(); if(data.success){ alert('✅ Session dihapus!'); closeSessionModal(); loadBots(); } else { alert('❌ '+data.message); } } catch(e){ alert('Error: '+e.message); }
+  }
+
+  // ============ CLOSE MODALS ============
+  document.getElementById('terminalModal').addEventListener('click', (e) => { if(e.target===document.getElementById('terminalModal')) closeTerminal(); });
+  document.getElementById('sessionModal').addEventListener('click', (e) => { if(e.target===document.getElementById('sessionModal')) closeSessionModal(); });
+  document.addEventListener('keydown', (e) => { if(e.key==='Escape'){ if(document.getElementById('terminalModal').classList.contains('active')) closeTerminal(); if(document.getElementById('sessionModal').classList.contains('active')) closeSessionModal(); } });
+
+  // ============ INIT ============
+  loadBots();
+  
+  // Update ping every 1 second (real-time)
+  setInterval(updateAllPings, 1000);
+  
+  // Full reload every 15 seconds
+  setInterval(loadBots, 15000);
+</script>

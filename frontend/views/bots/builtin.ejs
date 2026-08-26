@@ -1,0 +1,445 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="builtin-container">
+  <div class="builtin-header">
+    <div>
+      <h1><i class="fas fa-star" style="color:#fbbf24;"></i> Built-in Bot</h1>
+      <p>Bot WhatsApp bawaan Rye Panel</p>
+    </div>
+    <button onclick="window.location.href='/bots'" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+  </div>
+
+  <div class="builtin-card" id="builtinBot">
+    <div class="loading">Loading RyeBot...</div>
+  </div>
+</div>
+
+<!-- TERMINAL MODAL -->
+<div class="terminal-modal-overlay" id="terminalModal" style="display:none;">
+  <div class="terminal-modal">
+    <div class="terminal-modal-header">
+      <div>
+        <span style="font-weight:600;"><i class="fas fa-terminal" style="color:#6c63ff;"></i> Terminal</span>
+        <span id="terminalBotName" style="color:#aaa;font-size:0.9rem;margin-left:10px;">RyeBot</span>
+        <span id="termStatus" style="color:#888;font-size:0.7rem;margin-left:12px;">● Disconnected</span>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="clearTerminalModal()" class="btn-term">Clear</button>
+        <button onclick="closeTerminalModal()" class="btn-term">Close</button>
+      </div>
+    </div>
+    <div class="terminal-modal-body" id="terminalBody">
+      <div class="terminal-line terminal-welcome">Connecting to terminal...</div>
+    </div>
+    <div class="terminal-modal-footer">
+      <span id="autoScrollLabel" style="color:#555;font-size:0.6rem;">Auto-scroll: ON</span>
+      <span style="color:#555;font-size:0.6rem;">Click terminal to toggle</span>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .builtin-container { padding: 20px; max-width: 1000px; margin: 60px auto 0 0; }
+  .builtin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+  .builtin-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+  .builtin-header p { color: var(--text-secondary, #888); margin: 0; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-color, #fff); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-warning { background: #f59e0b; color: #fff; }
+  .btn-info { background: #3b82f6; color: #fff; }
+  .btn-purple { background: #8b5cf6; color: #fff; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-primary { background: #6c63ff; color: #fff; }
+  .btn-primary:hover { background: #5a52e0; }
+
+  .builtin-card { background: var(--bg-card, rgba(255,255,255,0.04)); border-radius: 20px; padding: 24px; border: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+
+  .builtin-info { display: flex; align-items: center; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+  .builtin-icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(108,99,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #6c63ff; }
+  .builtin-info h2 { margin: 0; font-size: 1.3rem; }
+  .builtin-info p { margin: 4px 0 8px; color: var(--text-secondary, #888); }
+
+  .builtin-badge { display: flex; gap: 10px; flex-wrap: wrap; }
+  .badge { font-size: 0.65rem; font-weight: 600; padding: 3px 14px; border-radius: 20px; text-transform: uppercase; }
+  .badge.builtin { background: rgba(245,158,11,0.25); color: #fbbf24; }
+  .badge.status { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .badge.status.error { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .badge.status.stopped { background: rgba(107,114,128,0.15); color: #6b7280; }
+
+  .phone-section { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); flex-wrap: wrap; }
+  .phone-section label { font-weight: 500; font-size: 0.9rem; color: var(--text-secondary, #aaa); }
+  .phone-section input { flex: 1; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); background: var(--bg-input, rgba(255,255,255,0.05)); color: var(--text-color, #fff); font-size: 0.95rem; min-width: 200px; }
+  .phone-section input:focus { outline: none; border-color: #6c63ff; }
+  .phone-section .btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: 8px; }
+
+  .builtin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+  .builtin-stats .stat-item { text-align: center; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 12px; }
+  .builtin-stats .stat-num { font-size: 1.2rem; font-weight: 700; color: var(--text-color, #fff); }
+  .builtin-stats .stat-label { font-size: 0.6rem; color: var(--text-secondary, #888); text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .builtin-actions { display: flex; gap: 10px; flex-wrap: wrap; padding: 20px 0; border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06)); }
+  .builtin-commands { padding-top: 20px; }
+  .builtin-commands h3 { font-size: 1rem; margin: 0 0 15px 0; }
+
+  .commands-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+  .command-group h4 { font-size: 0.85rem; margin: 0 0 8px 0; color: var(--text-secondary, #aaa); }
+  .command-item { font-size: 0.8rem; padding: 4px 0; color: var(--text-secondary, #888); }
+  .command-item .cmd { color: #fbbf24; font-weight: 600; font-family: monospace; }
+
+  .loading { text-align: center; padding: 40px; color: var(--text-secondary, #888); }
+  .phone-display { color: var(--text-secondary, #888); font-size: 0.9rem; }
+
+  .terminal-modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px);
+    z-index: 9999; display: none; align-items: center; justify-content: center;
+  }
+  .terminal-modal-overlay.active { display: flex !important; }
+
+  .terminal-modal {
+    background: rgba(12, 12, 25, 0.97); backdrop-filter: blur(20px);
+    border-radius: 20px; width: 92%; max-width: 900px; max-height: 80vh;
+    border: 1px solid rgba(108, 99, 255, 0.15); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: modalSlideUp 0.3s ease forwards;
+  }
+
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .terminal-modal-header { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); flex-shrink: 0; }
+  .btn-term { padding: 4px 14px; border-radius: 8px; border: none; background: rgba(255,255,255,0.08); color: #ccc; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .btn-term:hover { background: rgba(255,255,255,0.15); }
+
+  .terminal-modal-body { padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.7; min-height: 300px; max-height: 55vh; overflow-y: auto; background: rgba(0, 0, 0, 0.3); flex: 1; }
+  .terminal-modal-body::-webkit-scrollbar { width: 4px; }
+  .terminal-modal-body::-webkit-scrollbar-track { background: transparent; }
+  .terminal-modal-body::-webkit-scrollbar-thumb { background: #6c63ff; border-radius: 10px; }
+
+  .terminal-modal-body .terminal-line { padding: 1px 0; color: #c8d0dc; white-space: pre-wrap; word-break: break-word; border-bottom: 1px solid rgba(255,255,255,0.02); }
+  .terminal-modal-body .timestamp { color: #4a5568; margin-right: 8px; font-size: 0.7rem; }
+  .terminal-modal-body .level-info { color: #60a5fa; }
+  .terminal-modal-body .level-error { color: #f87171; }
+  .terminal-modal-body .level-warn { color: #fbbf24; }
+  .terminal-modal-body .level-success { color: #34d399; }
+  .terminal-modal-body .level-message { color: #e2e8f0; }
+  .terminal-modal-body .terminal-welcome { color: #4a5568; border-bottom: none !important; }
+
+  .terminal-modal-footer { padding: 6px 18px; display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); flex-shrink: 0; }
+
+  @media (max-width: 768px) {
+    .builtin-container { padding: 10px; margin: 60px 10px 0; }
+    .builtin-info { flex-direction: column; text-align: center; }
+    .builtin-badge { justify-content: center; }
+    .builtin-actions { justify-content: center; }
+    .commands-grid { grid-template-columns: 1fr; }
+    .phone-section { flex-direction: column; align-items: stretch; }
+    .phone-section input { min-width: 100%; }
+    .terminal-modal { width: 95%; max-height: 85vh; }
+    .terminal-modal-body { font-size: 0.8rem; padding: 12px 14px; }
+  }
+</style>
+
+<script>
+  const BUILTIN_ID = 'rye-bot-builtin';
+  const BOT_NAME = 'RyeBot';
+  let ws = null;
+  let reconnectAttempts = 0;
+  let autoScroll = true;
+
+  async function loadBuiltinBot() {
+    try {
+      const res = await fetch('/api/bots/builtin');
+      const data = await res.json();
+      const container = document.getElementById('builtinBot');
+
+      if (!data.success || !data.data) {
+        container.innerHTML = `<div class="loading" style="color:#ef4444;">❌ Built-in bot not found</div>`;
+        return;
+      }
+
+      const bot = data.data;
+      const status = bot.realStatus || bot.status || 'stopped';
+      const isRunning = status === 'running' || status === 'connecting';
+      const statusClass = isRunning ? '' : status === 'error' ? 'error' : 'stopped';
+      const statusLabel = status.toUpperCase();
+      const uptime = bot.uptime || 0;
+      const uptimeStr = uptime > 3600 ? `${Math.floor(uptime/3600)}h ${Math.floor((uptime%3600)/60)}m` :
+                        uptime > 60 ? `${Math.floor(uptime/60)}m ${uptime%60}s` : `${uptime}s`;
+      const phone = bot.phone_number || '';
+      const owner = bot.owner_number || '';
+
+      container.innerHTML = `
+        <div class="builtin-info">
+          <div class="builtin-icon"><i class="fas fa-robot"></i></div>
+          <div>
+            <h2>RyeBot</h2>
+            <p>Full Feature WhatsApp Bot</p>
+            <div class="builtin-badge">
+              <span class="badge builtin">Built-in</span>
+              <span class="badge status ${statusClass}">● ${statusLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="phone-section">
+          <label><i class="fas fa-phone"></i> Nomor WhatsApp Bot:</label>
+          <input type="text" id="phoneInput" placeholder="628xxxxxxxxxx" value="${phone}">
+          <button class="btn btn-primary btn-sm" onclick="updatePhone()">
+            <i class="fas fa-save"></i> Simpan
+          </button>
+          <span class="phone-display" id="phoneStatus">${phone ? '✅ Terdaftar' : '❌ Belum diisi'}</span>
+        </div>
+
+        <div class="builtin-stats">
+          <div class="stat-item"><div class="stat-num">${uptimeStr}</div><div class="stat-label">Uptime</div></div>
+          <div class="stat-item"><div class="stat-num">${bot.cpu || 0}%</div><div class="stat-label">CPU</div></div>
+          <div class="stat-item"><div class="stat-num">${bot.memory || 0} MB</div><div class="stat-label">Memory</div></div>
+          <div class="stat-item"><div class="stat-num">4</div><div class="stat-label">Commands</div></div>
+        </div>
+
+        <div class="builtin-actions">
+          <button class="btn btn-success" onclick="actionBot('start')"><i class="fas fa-play"></i> Start</button>
+          <button class="btn btn-warning" onclick="actionBot('stop')"><i class="fas fa-stop"></i> Stop</button>
+          <button class="btn btn-info" onclick="actionBot('restart')"><i class="fas fa-sync"></i> Restart</button>
+          <button class="btn btn-purple" onclick="openTerminal()"><i class="fas fa-terminal"></i> Terminal</button>
+          <button class="btn btn-purple" onclick="window.location.href='/bots/${BUILTIN_ID}/files'"><i class="fas fa-folder"></i> Files</button>
+          <button class="btn btn-purple" onclick="window.location.href='/bots/${BUILTIN_ID}/env'"><i class="fas fa-key"></i> Env</button>
+          <button class="btn btn-danger" onclick="deleteSession()"><i class="fas fa-trash"></i> Delete Session</button>
+        </div>
+
+        <div class="builtin-commands">
+          <h3>📝 Available Commands</h3>
+          <div class="commands-grid">
+            <div class="command-group"><h4>📋 General</h4>
+              <div class="command-item"><span class="cmd">.menu</span> - Show menu</div>
+              <div class="command-item"><span class="cmd">.ping</span> - Check response</div>
+              <div class="command-item"><span class="cmd">.runtime</span> - Bot uptime</div>
+            </div>
+            <div class="command-group"><h4>👑 Owner</h4>
+              <div class="command-item"><span class="cmd">.eval</span> - Execute code</div>
+            </div>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      document.getElementById('builtinBot').innerHTML = `<div class="loading" style="color:#ef4444;">❌ ${error.message}</div>`;
+    }
+  }
+
+  function openTerminal() {
+    const modal = document.getElementById('terminalModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.getElementById('terminalBody').innerHTML = '<div class="terminal-line terminal-welcome">Connecting to terminal...</div>';
+    document.getElementById('termStatus').textContent = '● Connecting...';
+    document.getElementById('termStatus').style.color = '#f59e0b';
+    reconnectAttempts = 0;
+    connectTerminalWebSocket();
+  }
+
+  function closeTerminalModal() {
+    const modal = document.getElementById('terminalModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+    if (ws) {
+      ws.close();
+      ws = null;
+    }
+    reconnectAttempts = 0;
+  }
+
+  function connectTerminalWebSocket() {
+    if (ws && ws.readyState === ws.OPEN) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/terminal?botId=${BUILTIN_ID}`;
+    
+    ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      document.getElementById('termStatus').textContent = '● Online';
+      document.getElementById('termStatus').style.color = '#22c55e';
+      reconnectAttempts = 0;
+      addTerminalLine('Connected to bot terminal', 'success');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        handleTerminalMessage(data);
+      } catch (error) {
+        console.error('[Terminal] Parse error:', error);
+      }
+    };
+
+    ws.onclose = () => {
+      document.getElementById('termStatus').textContent = '● Disconnected';
+      document.getElementById('termStatus').style.color = '#ef4444';
+      
+      if (document.getElementById('terminalModal').classList.contains('active')) {
+        if (reconnectAttempts < 10) {
+          reconnectAttempts++;
+          addTerminalLine(`Reconnecting... (${reconnectAttempts}/10)`, 'warn');
+          setTimeout(connectTerminalWebSocket, 3000 * Math.min(reconnectAttempts, 5));
+        }
+      }
+    };
+
+    ws.onerror = (error) => {
+      addTerminalLine('WebSocket error', 'error');
+    };
+  }
+
+  function handleTerminalMessage(data) {
+    switch (data.type) {
+      case 'status':
+        if (data.data.process && data.data.process.running) {
+          document.getElementById('termStatus').textContent = '● Online';
+          document.getElementById('termStatus').style.color = '#22c55e';
+        }
+        break;
+      case 'log':
+        addTerminalLine(data.data.message, data.data.level || 'info');
+        break;
+      case 'clear':
+        document.getElementById('terminalBody').innerHTML = '';
+        addTerminalLine('Terminal cleared', 'info');
+        break;
+      case 'ping':
+        if (ws && ws.readyState === ws.OPEN) {
+          ws.send(JSON.stringify({ type: 'pong' }));
+        }
+        break;
+      case 'error':
+        addTerminalLine('Error: ' + data.message, 'error');
+        break;
+      default:
+        console.log('[Terminal] Unknown message:', data);
+    }
+  }
+
+  function addTerminalLine(message, level = 'info') {
+    const body = document.getElementById('terminalBody');
+    const line = document.createElement('div');
+    line.className = 'terminal-line';
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const levelClass = 'level-' + level;
+    const levelLabel = level.toUpperCase();
+    
+    line.innerHTML = `
+      <span class="timestamp">[${timestamp}]</span>
+      <span class="${levelClass}">[${levelLabel}]</span>
+      <span class="level-message">${escapeHtml(message)}</span>
+    `;
+    
+    body.appendChild(line);
+    
+    if (autoScroll) {
+      body.scrollTop = body.scrollHeight;
+    }
+  }
+
+  function clearTerminalModal() {
+    if (ws && ws.readyState === ws.OPEN) {
+      ws.send(JSON.stringify({ type: 'clear' }));
+    }
+    document.getElementById('terminalBody').innerHTML = '';
+    addTerminalLine('Terminal cleared', 'info');
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  document.getElementById('terminalModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('terminalModal')) {
+      closeTerminalModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeTerminalModal();
+    }
+  });
+
+  document.getElementById('terminalBody').addEventListener('click', () => {
+    autoScroll = !autoScroll;
+    document.getElementById('autoScrollLabel').textContent = `Auto-scroll: ${autoScroll ? 'ON' : 'OFF'}`;
+    addTerminalLine(`Auto-scroll: ${autoScroll ? 'ON' : 'OFF'}`, 'info');
+  });
+
+  async function updatePhone() {
+    const phone = document.getElementById('phoneInput').value.trim();
+    if (!phone) { alert('Masukkan nomor WhatsApp bot!'); return; }
+    if (!/^[0-9]{10,15}$/.test(phone)) { alert('Format nomor tidak valid! Contoh: 6285141432864'); return; }
+
+    try {
+      const res = await fetch(`/api/bots/${BUILTIN_ID}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: phone })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('phoneStatus').textContent = '✅ Terdaftar';
+        document.getElementById('phoneStatus').style.color = '#22c55e';
+        alert('✅ Nomor WhatsApp bot berhasil disimpan!');
+        loadBuiltinBot();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  async function actionBot(action) {
+    try {
+      const res = await fetch(`/api/bots/${BUILTIN_ID}/${action}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        loadBuiltinBot();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  async function deleteSession() {
+    if (!confirm('⚠️ Hapus session WhatsApp bot ini?\n\nBot harus melakukan pairing ulang.')) return;
+
+    try {
+      const res = await fetch(`/api/sessions/${BUILTIN_ID}`, { method: 'DELETE' });
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Session berhasil dihapus!');
+        loadBuiltinBot();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  loadBuiltinBot();
+  setInterval(loadBuiltinBot, 5000);
+</script>

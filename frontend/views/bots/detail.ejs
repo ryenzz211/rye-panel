@@ -1,0 +1,289 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="detail-container">
+  <div class="detail-header">
+    <div>
+      <h1 id="botName">Loading...</h1>
+      <p id="botStatus">Status: <span class="status-badge">● Loading</span></p>
+    </div>
+    <div>
+      <button onclick="window.location.href='/bots'" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+  </div>
+
+  <!-- STATS GRID -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-microchip"></i></div>
+      <div class="stat-info">
+        <h3 id="botCpu">0%</h3>
+        <p>CPU Usage</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-memory"></i></div>
+      <div class="stat-info">
+        <h3 id="botMemory">0 MB</h3>
+        <p>Memory Usage</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-clock"></i></div>
+      <div class="stat-info">
+        <h3 id="botUptime">0s</h3>
+        <p>Uptime</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon"><i class="fas fa-wifi"></i></div>
+      <div class="stat-info">
+        <h3 id="botStatusText">● Stopped</h3>
+        <p>Status</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOT INFO -->
+  <div class="detail-card">
+    <h3>Bot Information</h3>
+    <div class="detail-grid" id="botInfo">
+      <div class="info-row"><span class="label">ID</span><span class="value" id="botId">-</span></div>
+      <div class="info-row"><span class="label">Name</span><span class="value" id="botDisplayName">-</span></div>
+      <div class="info-row"><span class="label">Type</span><span class="value" id="botType">-</span></div>
+      <div class="info-row"><span class="label">Entry File</span><span class="value" id="botEntry">-</span></div>
+      <div class="info-row"><span class="label">Prefix</span><span class="value" id="botPrefix">-</span></div>
+      <div class="info-row"><span class="label">Phone</span><span class="value" id="botPhone">-</span></div>
+      <div class="info-row"><span class="label">Workspace</span><span class="value" id="botWorkspace">-</span></div>
+      <div class="info-row"><span class="label">Auto Restart</span><span class="value" id="botAutoRestart">-</span></div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <div class="detail-actions">
+    <button class="btn btn-success" onclick="actionBot('start')"><i class="fas fa-play"></i> Start</button>
+    <button class="btn btn-warning" onclick="actionBot('stop')"><i class="fas fa-stop"></i> Stop</button>
+    <button class="btn btn-info" onclick="window.location.href='/bots/${botId}/terminal'"><i class="fas fa-terminal"></i> Terminal</button>
+    <button class="btn btn-purple" onclick="window.location.href='/bots/${botId}/files'"><i class="fas fa-folder"></i> Files</button>
+    <button class="btn btn-purple" onclick="window.location.href='/bots/${botId}/env'"><i class="fas fa-key"></i> Env</button>
+    <button class="btn btn-danger" onclick="deleteBot()"><i class="fas fa-trash"></i> Delete</button>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .detail-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 60px auto 0 0;
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .detail-header h1 { font-size: 1.8rem; font-weight: 700; margin: 0; }
+  .detail-header p { color: var(--text-secondary, #888); margin: 5px 0 0; }
+
+  .status-badge {
+    padding: 2px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.8rem;
+  }
+  .status-badge.running { color: #22c55e; background: rgba(34,197,94,0.15); }
+  .status-badge.stopped { color: #6b7280; background: rgba(107,114,128,0.15); }
+  .status-badge.error { color: #ef4444; background: rgba(239,68,68,0.15); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+
+  .stat-card {
+    background: var(--bg-card, rgba(255,255,255,0.04));
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+  }
+
+  .stat-icon {
+    font-size: 1.4rem;
+    color: #6c63ff;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(108,99,255,0.12);
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .stat-info h3 { font-size: 1.4rem; margin: 0; font-weight: 700; color: var(--text-color, #fff); }
+  .stat-info p { margin: 0; color: var(--text-secondary, #888); font-size: 0.8rem; }
+
+  .detail-card {
+    background: var(--bg-card, rgba(255,255,255,0.04));
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    margin-bottom: 20px;
+  }
+
+  .detail-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: var(--text-secondary, #aaa);
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    padding-bottom: 10px;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 30px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.85rem;
+  }
+
+  .info-row .label { color: var(--text-secondary, #888); }
+  .info-row .value { color: var(--text-color, #ddd); font-weight: 500; }
+
+  .detail-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-warning { background: #f59e0b; color: #fff; }
+  .btn-info { background: #3b82f6; color: #fff; }
+  .btn-purple { background: #8b5cf6; color: #fff; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: var(--text-color, #fff); }
+
+  .btn:hover { opacity: 0.85; transform: translateY(-2px); }
+
+  @media (min-width: 1024px) { .detail-container { margin-left: 0; } }
+  @media (max-width: 768px) {
+    .detail-container { padding: 10px; margin: 60px 10px 0; }
+    .detail-grid { grid-template-columns: 1fr; gap: 2px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px 14px; }
+    .stat-info h3 { font-size: 1.1rem; }
+    .detail-actions { flex-direction: column; }
+    .detail-actions .btn { justify-content: center; }
+  }
+</style>
+
+<script>
+  const botId = '<%= botId %>';
+
+  async function loadBotDetail() {
+    try {
+      const res = await fetch(`/api/bots/${botId}`);
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('botName').textContent = 'Bot not found';
+        return;
+      }
+
+      const bot = data.data;
+      document.getElementById('botName').textContent = bot.display_name || bot.name;
+      document.getElementById('botId').textContent = bot.id;
+      document.getElementById('botDisplayName').textContent = bot.display_name || bot.name;
+      document.getElementById('botType').textContent = bot.type;
+      document.getElementById('botEntry').textContent = bot.entry_file || 'index.js';
+      document.getElementById('botPrefix').textContent = bot.prefix || '.';
+      document.getElementById('botPhone').textContent = bot.phone_number || '-';
+      document.getElementById('botWorkspace').textContent = bot.workspace_path || '-';
+      document.getElementById('botAutoRestart').textContent = bot.auto_restart ? 'ON' : 'OFF';
+
+      const status = bot.realStatus || bot.status || 'stopped';
+      const statusColors = {
+        running: 'running', stopped: 'stopped', error: 'error',
+        starting: 'running', connecting: 'running', crashed: 'error'
+      };
+      document.getElementById('botStatus').innerHTML = `Status: <span class="status-badge ${statusColors[status] || 'stopped'}">● ${status.toUpperCase()}</span>`;
+      document.getElementById('botStatusText').textContent = `● ${status.toUpperCase()}`;
+
+      const uptime = bot.uptime || 0;
+      document.getElementById('botUptime').textContent = 
+        uptime > 3600 ? `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m` :
+        uptime > 60 ? `${Math.floor(uptime / 60)}m ${uptime % 60}s` :
+        `${uptime}s`;
+
+      document.getElementById('botCpu').textContent = bot.cpu ? `${bot.cpu}%` : '0%';
+      document.getElementById('botMemory').textContent = bot.memory ? `${bot.memory} MB` : '0 MB';
+
+    } catch (error) {
+      document.getElementById('botName').textContent = 'Error loading bot';
+      console.error('[Detail] Error:', error);
+    }
+  }
+
+  async function actionBot(action) {
+    try {
+      const res = await fetch(`/api/bots/${botId}/${action}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        loadBotDetail();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  async function deleteBot() {
+    if (!confirm('Yakin ingin menghapus bot ini?')) return;
+    try {
+      const res = await fetch(`/api/bots/${botId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        window.location.href = '/bots';
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }
+
+  loadBotDetail();
+  setInterval(loadBotDetail, 3000);
+</script>

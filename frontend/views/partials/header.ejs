@@ -1,0 +1,208 @@
+<header class="app-header">
+  <div class="header-left">
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+      <i class="fas fa-bars icon-visible"></i>
+    </button>
+    <h1 class="app-title">Rye Panel</h1>
+  </div>
+  <div class="header-right">
+    <span class="user-name"><%= locals.user ? user.display_name || user.username : 'Guest' %></span>
+    <i class="fas fa-user-circle user-avatar"></i>
+  </div>
+</header>
+
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/responsive.css">
+
+<style>
+  .app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-header);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 1000;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .menu-toggle {
+    background: rgba(108, 99, 255, 0.15);
+    border: 1px solid rgba(108, 99, 255, 0.25);
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: 14px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(108, 99, 255, 0.15);
+    width: 60px;
+    height: 56px;
+  }
+
+  .menu-toggle i {
+    font-size: 36px !important;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .menu-toggle:hover {
+    background: rgba(108, 99, 255, 0.25);
+    border-color: rgba(108, 99, 255, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(108, 99, 255, 0.25);
+  }
+
+  .menu-toggle:active {
+    transform: scale(0.95);
+  }
+
+  .app-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6c63ff, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradientMove 4s ease infinite;
+    letter-spacing: -0.5px;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .user-name {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+
+  .user-avatar {
+    font-size: 2.2rem;
+    color: #6c63ff;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+  }
+
+  .user-avatar:hover {
+    transform: scale(1.1) rotate(-5deg);
+  }
+
+  @media (min-width: 1024px) {
+    .menu-toggle {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .menu-toggle {
+      display: flex !important;
+    }
+    .user-name {
+      display: none;
+    }
+    .app-header {
+      padding: 0 16px;
+    }
+    .header-left {
+      gap: 14px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .menu-toggle {
+      padding: 8px 14px !important;
+      width: 50px;
+      height: 48px;
+    }
+    .menu-toggle i {
+      font-size: 30px !important;
+    }
+    .app-title {
+      font-size: 1.1rem;
+    }
+    .user-avatar {
+      font-size: 1.8rem;
+    }
+  }
+</style>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) {
+      sidebar.classList.toggle('open');
+      sidebar.classList.toggle('closed');
+    }
+    if (overlay) {
+      overlay.classList.toggle('show');
+    }
+  }
+
+  function applyTheme(theme) {
+    const body = document.body;
+    const isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isDark) {
+      body.classList.remove('light-mode');
+      document.documentElement.style.setProperty('--bg-body', '#0a0a12');
+      document.documentElement.style.setProperty('--text-primary', '#ffffff');
+      document.documentElement.style.setProperty('--text-secondary', '#888888');
+      document.documentElement.style.setProperty('--bg-card', 'rgba(255,255,255,0.04)');
+      document.documentElement.style.setProperty('--bg-card-hover', 'rgba(255,255,255,0.08)');
+      document.documentElement.style.setProperty('--border-color', 'rgba(255,255,255,0.06)');
+      document.documentElement.style.setProperty('--bg-header', 'rgba(12,12,20,0.92)');
+      document.documentElement.style.setProperty('--bg-sidebar', 'rgba(10,10,22,0.92)');
+    } else {
+      body.classList.add('light-mode');
+      document.documentElement.style.setProperty('--bg-body', '#f0f0f0');
+      document.documentElement.style.setProperty('--text-primary', '#1a1a2e');
+      document.documentElement.style.setProperty('--text-secondary', '#555555');
+      document.documentElement.style.setProperty('--bg-card', 'rgba(255,255,255,0.7)');
+      document.documentElement.style.setProperty('--bg-card-hover', 'rgba(255,255,255,0.9)');
+      document.documentElement.style.setProperty('--border-color', 'rgba(0,0,0,0.08)');
+      document.documentElement.style.setProperty('--bg-header', 'rgba(245,245,245,0.92)');
+      document.documentElement.style.setProperty('--bg-sidebar', 'rgba(240,240,245,0.92)');
+    }
+  }
+
+  function loadTheme() {
+    const saved = localStorage.getItem('rye-theme') || 'dark';
+    applyTheme(saved);
+  }
+
+  document.addEventListener('DOMContentLoaded', loadTheme);
+  window.applyTheme = applyTheme;
+</script>

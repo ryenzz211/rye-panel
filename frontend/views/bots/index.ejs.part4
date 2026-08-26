@@ -1,0 +1,21 @@
+  // ============ DELETE BOT ============
+  async function deleteBot(botId, botName) {
+    if (!confirm(`Yakin ingin menghapus bot "${botName}"?\\n\\nTindakan ini tidak dapat dibatalkan!`)) return;
+
+    try {
+      const res = await fetch(`/api/bots/${botId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Bot berhasil dihapus!');
+        loadBots();
+      } else {
+        alert('❌ Gagal hapus bot: ' + data.message);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    }
+  }

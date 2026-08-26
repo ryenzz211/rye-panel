@@ -1,0 +1,342 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="backup-container">
+  <div class="backup-header">
+    <div>
+      <h2><i class="fas fa-archive"></i> Backup & Restore</h2>
+      <p>Kelola backup konfigurasi bot</p>
+    </div>
+    <button onclick="createBackup()" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Create Backup
+    </button>
+  </div>
+
+  <div id="backupList" class="backup-list">
+    <div class="loading">Loading backups...</div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user }) %>
+
+<style>
+  .backup-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 60px auto 0 0;
+  }
+
+  .backup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+    background: rgba(255,255,255,0.03);
+    padding: 15px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .backup-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .backup-header h2 i {
+    color: #6c63ff;
+  }
+
+  .backup-header p {
+    color: #888;
+    margin: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #6c63ff;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #5a52e0;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: #fff;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .btn-success {
+    background: #22c55e;
+    color: #fff;
+  }
+
+  .btn-success:hover {
+    background: #16a34a;
+  }
+
+  .btn-info {
+    background: #3b82f6;
+    color: #fff;
+  }
+
+  .btn-info:hover {
+    background: #2563eb;
+  }
+
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  .backup-list {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    min-height: 200px;
+  }
+
+  .backup-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .backup-item:hover {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .backup-item .backup-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .backup-item .backup-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .backup-item .backup-meta {
+    color: #888;
+    font-size: 0.75rem;
+  }
+
+  .backup-item .backup-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    color: #6c63ff;
+    margin-bottom: 10px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+  }
+
+  @media (max-width: 768px) {
+    .backup-container {
+      margin: 60px 10px 0 10px;
+      padding: 10px;
+    }
+    .backup-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .backup-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .backup-item .backup-actions {
+      justify-content: flex-start;
+    }
+  }
+</style>
+
+<script>
+  async function loadBackups() {
+    try {
+      const res = await fetch('/api/backup');
+      const data = await res.json();
+
+      const container = document.getElementById('backupList');
+
+      if (!data.success) {
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error: ${data.message}</div>`;
+        return;
+      }
+
+      const backups = data.data;
+
+      if (backups.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-archive"></i>
+            <p>Belum ada backup</p>
+            <button onclick="createBackup()" class="btn btn-primary" style="margin-top:10px;">
+              <i class="fas fa-plus"></i> Create Backup
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      for (const backup of backups) {
+        const sizeMB = (backup.size / 1024 / 1024).toFixed(2);
+        const date = new Date(backup.created).toLocaleString();
+
+        html += `
+          <div class="backup-item">
+            <div class="backup-info">
+              <span class="backup-name">📦 ${backup.name}</span>
+              <span class="backup-meta">
+                ${date} · ${sizeMB} MB · ID: ${backup.id}
+              </span>
+            </div>
+            <div class="backup-actions">
+              <button class="btn btn-success btn-sm" onclick="restoreBackup('${backup.id}')" title="Restore">
+                <i class="fas fa-undo"></i> Restore
+              </button>
+              <button class="btn btn-info btn-sm" onclick="downloadBackup('${backup.id}')" title="Download">
+                <i class="fas fa-download"></i> Download
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteBackup('${backup.id}')" title="Delete">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    } catch (error) {
+      document.getElementById('backupList').innerHTML = `
+        <div class="empty-state" style="color:#ef4444;">Error: ${error.message}</div>
+      `;
+    }
+  }
+
+  async function createBackup() {
+    const name = prompt('Nama backup (optional):', 'backup');
+    if (name === null) return;
+
+    try {
+      const res = await fetch('/api/backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name || 'backup' })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Backup berhasil dibuat!');
+        loadBackups();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async function restoreBackup(backupId) {
+    if (!confirm(`Restore backup "${backupId}"?\n\nSemua data saat ini akan diganti!`)) return;
+
+    try {
+      const res = await fetch(`/api/backup/${backupId}/restore`, {
+        method: 'POST'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Backup berhasil direstore!');
+        loadBackups();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async function downloadBackup(backupId) {
+    try {
+      window.location.href = `/api/backup/${backupId}/download`;
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async function deleteBackup(backupId) {
+    if (!confirm(`Hapus backup "${backupId}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/backup/${backupId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('✅ Backup berhasil dihapus!');
+        loadBackups();
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  // Load backups on page load
+  loadBackups();
+</script>

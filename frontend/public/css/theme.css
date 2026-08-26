@@ -1,0 +1,219 @@
+/* ========== ROOT VARIABLES ========== */
+:root {
+  /* DARK MODE (default) */
+  --bg-body: #0a0a12;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --bg-input: rgba(255, 255, 255, 0.06);
+  --bg-input-focus: rgba(255, 255, 255, 0.10);
+  --bg-modal: rgba(20, 20, 35, 0.95);
+  --bg-sidebar: rgba(10, 10, 22, 0.92);
+  --bg-header: rgba(12, 12, 20, 0.92);
+  --bg-chart: rgba(0, 0, 0, 0.25);
+  
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --text-inverse: #1a1a2e;
+  
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --shadow-glow: rgba(108, 99, 255, 0.15);
+  
+  --color-primary: #6c63ff;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --color-purple: #8b5cf6;
+  
+  --radius-card: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 20px;
+}
+
+/* ========== LIGHT MODE ========== */
+body.light-mode {
+  --bg-body: #f0f0f0;
+  --bg-card: rgba(255, 255, 255, 0.7);
+  --bg-card-hover: rgba(255, 255, 255, 0.9);
+  --bg-input: rgba(255, 255, 255, 0.8);
+  --bg-input-focus: #ffffff;
+  --bg-modal: rgba(245, 245, 245, 0.95);
+  --bg-sidebar: rgba(240, 240, 245, 0.92);
+  --bg-header: rgba(245, 245, 245, 0.92);
+  --bg-chart: rgba(0, 0, 0, 0.05);
+  
+  --text-primary: #1a1a2e;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --shadow-glow: rgba(108, 99, 255, 0.1);
+}
+
+/* ========== APPLY TO BODY ========== */
+body {
+  background: var(--bg-body) !important;
+  color: var(--text-primary) !important;
+  transition: background 0.4s ease, color 0.4s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* ========== CARDS ========== */
+.stat-card, .bot-card, .settings-card, .system-card, 
+.backup-item, .env-item, .file-item, .chart-card,
+.activity-section, .charts-section, .bot-preview-section,
+.welcome-section, .dev-card, .plugin-item, .user-item {
+  background: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  transition: background 0.4s ease, border-color 0.4s ease, transform 0.3s ease;
+}
+
+.stat-card:hover, .bot-card:hover, .settings-card:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: var(--border-hover) !important;
+}
+
+/* ========== INPUTS ========== */
+input, select, textarea, .settings-input, .settings-select {
+  background: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  background: var(--bg-input-focus) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+}
+
+/* ========== HEADER ========== */
+.app-header {
+  background: var(--bg-header) !important;
+  border-bottom-color: var(--border-color) !important;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+/* ========== SIDEBAR ========== */
+#sidebar {
+  background: var(--bg-sidebar) !important;
+  border-color: var(--border-color) !important;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+#sidebar .profile-info h3 {
+  color: var(--text-primary) !important;
+}
+#sidebar .profile-info p {
+  color: var(--text-secondary) !important;
+}
+#sidebar .sidebar-menu li a {
+  color: var(--text-secondary) !important;
+}
+#sidebar .sidebar-menu li a:hover {
+  color: var(--text-primary) !important;
+  background: rgba(108, 99, 255, 0.08) !important;
+}
+#sidebar .sidebar-menu li.active a {
+  color: var(--color-primary) !important;
+  background: rgba(108, 99, 255, 0.12) !important;
+}
+
+/* ========== TEXT ========== */
+h1, h2, h3, h4, h5, h6,
+.dashboard-header h1, .settings-header h2,
+.welcome-text h1, .stat-info h3,
+.bot-name, .plugin-name, .user-name,
+.section-header h3 {
+  color: var(--text-primary) !important;
+}
+
+p, span, .label, .stat-label, .chart-label,
+.dashboard-header p, .settings-header p,
+.bot-status, .bot-id, .user-username,
+.activity-text, .activity-time,
+.bp-name, .bp-status, .stat-trend {
+  color: var(--text-secondary) !important;
+}
+
+/* ========== BUTTONS ========== */
+.btn-secondary, .btn-ghost {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+.btn-secondary:hover, .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* ========== MODALS ========== */
+.terminal-modal-content, .session-modal-content,
+.env-modal-content, .user-modal-content,
+.plugin-modal-content, .edit-modal-content {
+  background: var(--bg-modal) !important;
+  border-color: var(--border-color) !important;
+}
+.terminal-modal-header, .session-modal-header,
+.env-modal-header, .user-modal-header,
+.plugin-modal-header, .edit-modal-header {
+  border-bottom-color: var(--border-color) !important;
+}
+.terminal-modal-footer, .session-modal-footer,
+.env-modal-footer, .user-modal-footer,
+.plugin-modal-footer, .edit-modal-footer {
+  border-top-color: var(--border-color) !important;
+}
+
+/* ========== CHARTS ========== */
+.bot-chart, .chart-card {
+  background: var(--bg-chart) !important;
+}
+.chart-card canvas {
+  filter: var(--chart-filter, none);
+}
+
+/* ========== SCROLLBAR ========== */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 10px;
+}
+
+/* ========== SELECT OPTIONS ========== */
+select option {
+  background: var(--bg-body) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ========== SKELETON ========== */
+.skeleton {
+  background: linear-gradient(90deg, 
+    var(--bg-card) 25%, 
+    var(--bg-card-hover) 50%, 
+    var(--bg-card) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ========== PLACEHOLDER ========== */
+::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}

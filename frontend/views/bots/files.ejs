@@ -1,0 +1,428 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="files-container">
+  <div class="files-header">
+    <div>
+      <h2><i class="fas fa-folder"></i> File Manager</h2>
+      <p id="currentPath" style="color:#888;font-size:0.85rem;">/</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="goBack()" class="btn btn-sm btn-secondary" id="backBtn" style="display:none;">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+      <button onclick="createFolder()" class="btn btn-sm btn-secondary">
+        <i class="fas fa-folder-plus"></i> New Folder
+      </button>
+      <button onclick="uploadFile()" class="btn btn-sm btn-secondary">
+        <i class="fas fa-upload"></i> Upload
+      </button>
+      <button onclick="window.location.href='/bots'" class="btn btn-sm btn-secondary">
+        <i class="fas fa-arrow-left"></i> Bots
+      </button>
+    </div>
+  </div>
+
+  <div id="fileList" class="file-list">
+    <div class="loading">Loading files...</div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user }) %>
+
+<style>
+  .files-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 60px auto 0 0;
+  }
+  .files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    padding: 15px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .files-header h2 { margin: 0; font-size: 1.2rem; }
+  .files-header h2 i { color: #6c63ff; }
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+  .btn-primary { background: #6c63ff; color: #fff; }
+  .btn-primary:hover { background: #5a52e0; }
+  .file-list {
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+    min-height: 200px;
+  }
+  .file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .file-item:hover { background: rgba(255,255,255,0.05); }
+  .file-item .file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+  }
+  .file-item .file-icon { font-size: 1.2rem; width: 30px; text-align: center; }
+  .file-item .file-icon.folder { color: #fbbf24; }
+  .file-item .file-icon.file { color: #60a5fa; }
+  .file-item .file-name { font-weight: 500; font-size: 0.9rem; }
+  .file-item .file-size { color: #666; font-size: 0.75rem; margin-left: 10px; }
+  .file-item .file-actions { display: flex; gap: 6px; }
+  .file-item .file-actions button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+  }
+  .file-item .file-actions button:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .file-item .file-actions button.danger:hover { background: rgba(239,68,68,0.2); color: #ef4444; }
+  .file-item .file-actions button.edit:hover { background: rgba(108,99,255,0.2); color: #6c63ff; }
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.2);
+  }
+  .breadcrumb span { color: #888; font-size: 0.8rem; cursor: pointer; }
+  .breadcrumb span:hover { color: #6c63ff; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+  .empty-state i { font-size: 3rem; color: #6c63ff; margin-bottom: 10px; }
+  .loading { text-align: center; padding: 40px; color: #888; }
+
+  .edit-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  .edit-modal.active { display: flex; }
+  .edit-modal-content {
+    background: #1a1a2e;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    border: 1px solid rgba(108,99,255,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .edit-modal-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .edit-modal-header h3 { margin: 0; font-size: 1rem; }
+  .edit-modal-body { padding: 20px; flex: 1; overflow-y: auto; }
+  .edit-modal-body textarea {
+    width: 100%;
+    min-height: 300px;
+    background: #0a0a12;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: #e2e8f0;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    resize: vertical;
+  }
+  .edit-modal-body textarea:focus { outline: none; border-color: #6c63ff; }
+  .edit-modal-footer {
+    padding: 12px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  @media (max-width: 768px) {
+    .files-container { margin: 60px 10px 0 10px; padding: 10px; }
+    .files-header { flex-direction: column; align-items: stretch; }
+    .file-item { flex-wrap: wrap; gap: 8px; }
+    .file-item .file-actions { width: 100%; justify-content: flex-end; }
+    .edit-modal-content { width: 95%; max-height: 95vh; }
+    .edit-modal-body textarea { min-height: 200px; }
+  }
+</style>
+
+<script>
+  const botId = '<%= botId %>';
+  let currentPath = '';
+  let pathHistory = [];
+  let editingFile = null;
+
+  async function loadFiles(path = '') {
+    try {
+      const res = await fetch(`/api/files/${botId}?path=${encodeURIComponent(path)}`);
+      const data = await res.json();
+
+      const container = document.getElementById('fileList');
+
+      if (!data.success) {
+        container.innerHTML = `<div class="empty-state" style="color:#ef4444;">Error: ${data.message}</div>`;
+        return;
+      }
+
+      const result = data.data;
+      
+      // Save to history
+      if (currentPath !== path) {
+        pathHistory.push(currentPath);
+      }
+      currentPath = result.path || '';
+      
+      document.getElementById('currentPath').textContent = '/' + currentPath;
+      
+      // Show/hide back button
+      const backBtn = document.getElementById('backBtn');
+      if (currentPath && currentPath !== '') {
+        backBtn.style.display = 'inline-flex';
+      } else {
+        backBtn.style.display = 'none';
+      }
+
+      if (result.items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <p>Folder kosong</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      
+      html += `<div class="breadcrumb">`;
+      const parts = currentPath.split('/').filter(p => p);
+      html += `<span onclick="loadFiles('')">📁 root</span>`;
+      let cumPath = '';
+      for (const part of parts) {
+        cumPath += part + '/';
+        html += ` <span>/</span> <span onclick="loadFiles('${cumPath.slice(0, -1)}')">${part}</span>`;
+      }
+      html += `</div>`;
+
+      for (const item of result.items) {
+        const icon = item.type === 'folder' ? '📁' : '📄';
+        const iconClass = item.type === 'folder' ? 'folder' : 'file';
+        const size = item.type === 'folder' ? '' : formatSize(item.size);
+
+        html += `
+          <div class="file-item">
+            <div class="file-info" onclick="${item.type === 'folder' ? `loadFiles('${item.path}')` : `editFile('${item.path}')`}">
+              <span class="file-icon ${iconClass}">${icon}</span>
+              <span class="file-name">${item.name}</span>
+              <span class="file-size">${size}</span>
+            </div>
+            <div class="file-actions">
+              ${item.type === 'file' ? `<button class="edit" onclick="editFile('${item.path}')" title="Edit">✏️</button>` : ''}
+              <button class="danger" onclick="deleteItem('${item.path}')" title="Delete">🗑️</button>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    } catch (error) {
+      document.getElementById('fileList').innerHTML = `
+        <div class="empty-state" style="color:#ef4444;">Error: ${error.message}</div>
+      `;
+    }
+  }
+
+  function goBack() {
+    const prevPath = pathHistory.pop() || '';
+    loadFiles(prevPath);
+  }
+
+  function formatSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  async function editFile(filePath) {
+    try {
+      const res = await fetch(`/api/files/${botId}/read?path=${encodeURIComponent(filePath)}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        alert('Error: ' + data.message);
+        return;
+      }
+
+      editingFile = filePath;
+      document.getElementById('editFileName').textContent = filePath;
+      document.getElementById('editContent').value = data.data.content || '';
+      document.getElementById('editModal').classList.add('active');
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  async function saveFile() {
+    const content = document.getElementById('editContent').value;
+    try {
+      const res = await fetch(`/api/files/${botId}/write`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: editingFile, content })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ File saved!');
+        document.getElementById('editModal').classList.remove('active');
+        loadFiles(currentPath);
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('active');
+  }
+
+  async function deleteItem(itemPath) {
+    if (!confirm(`Hapus ${itemPath}?`)) return;
+    
+    try {
+      const res = await fetch(`/api/files/${botId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: itemPath })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        loadFiles(currentPath);
+      } else {
+        alert('❌ ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  function createFolder() {
+    const name = prompt('Nama folder:');
+    if (!name) return;
+    
+    const path = currentPath ? currentPath + '/' + name : name;
+    fetch(`/api/files/${botId}/mkdir`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        loadFiles(currentPath);
+      } else {
+        alert('❌ ' + data.message);
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+  }
+
+  function uploadFile() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      const path = currentPath ? currentPath + '/' + file.name : file.name;
+      formData.append('file', file);
+      formData.append('path', path);
+      
+      fetch(`/api/files/${botId}/upload`, {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          loadFiles(currentPath);
+        } else {
+          alert('❌ ' + data.message);
+        }
+      })
+      .catch(err => alert('Error: ' + err.message));
+    };
+    input.click();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeEditModal();
+    }
+  });
+
+  loadFiles();
+</script>
+
+<!-- Edit Modal -->
+<div class="edit-modal" id="editModal">
+  <div class="edit-modal-content">
+    <div class="edit-modal-header">
+      <h3>✏️ Edit: <span id="editFileName"></span></h3>
+      <button onclick="closeEditModal()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div class="edit-modal-body">
+      <textarea id="editContent" spellcheck="false"></textarea>
+    </div>
+    <div class="edit-modal-footer">
+      <button onclick="closeEditModal()" class="btn btn-secondary">Cancel</button>
+      <button onclick="saveFile()" class="btn btn-primary">💾 Save</button>
+    </div>
+  </div>
+</div>

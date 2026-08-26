@@ -1,0 +1,329 @@
+<nav class="app-sidebar" id="sidebar">
+  <div class="sidebar-profile">
+    <div class="avatar">
+      <img src="https://ui-avatars.com/api/?name=<%= locals.user ? user.display_name || user.username : 'Guest' %>&background=6c63ff&color=fff&size=80&bold=true" alt="avatar">
+    </div>
+    <div class="profile-info">
+      <h3><%= locals.user ? user.display_name || user.username : 'Guest' %></h3>
+      <p><%= locals.user ? (user.role === 'admin' ? 'Administrator' : 'User') : 'Guest' %></p>
+      <div class="status-badge">● Active</div>
+    </div>
+  </div>
+
+  <ul class="sidebar-menu">
+    <li class="<%= currentPath === '/dashboard' ? 'active' : '' %>">
+      <a href="/dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/bots') ? 'active' : '' %>">
+      <a href="/bots"><i class="fas fa-robot"></i> Bots</a>
+    </li>
+    <li><a href="/bots/builtin"><i class="fas fa-star"></i> Built-in Bot</a></li>
+    <li><a href="/bots/import"><i class="fas fa-upload"></i> Import Bot</a></li>
+    <li class="<%= currentPath && currentPath.startsWith('/files') ? 'active' : '' %>">
+      <a href="/files"><i class="fas fa-folder"></i> File Manager</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/sessions') ? 'active' : '' %>">
+      <a href="/sessions"><i class="fas fa-wifi"></i> Sessions</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/settings') ? 'active' : '' %>">
+      <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/backup') ? 'active' : '' %>">
+      <a href="/backup"><i class="fas fa-archive"></i> Backup</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/system') ? 'active' : '' %>">
+      <a href="/system"><i class="fas fa-server"></i> System</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/audit') ? 'active' : '' %>">
+      <a href="/audit"><i class="fas fa-history"></i> Audit</a>
+    </li>
+    <% if (locals.user && user.role === 'admin') { %>
+    <li class="<%= currentPath && currentPath.startsWith('/users') ? 'active' : '' %>">
+      <a href="/users"><i class="fas fa-users"></i> Users</a>
+    </li>
+    <li class="<%= currentPath && currentPath.startsWith('/plugins') ? 'active' : '' %>">
+      <a href="/plugins"><i class="fas fa-puzzle-piece"></i> Plugins</a>
+    </li>
+    <% } %>
+    <li class="<%= currentPath && currentPath.startsWith('/developer') ? 'active' : '' %>">
+      <a href="/developer"><i class="fas fa-code"></i> Developer</a>
+    </li>
+    <li class="divider"></li>
+    <li><a href="/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <span>Rye Panel v1.0.0</span>
+    <span>© 2026 Ryenz Developer</span>
+  </div>
+</nav>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<style>
+  #sidebar {
+    position: fixed;
+    top: 74px;
+    left: 16px;
+    bottom: 16px;
+    width: 260px;
+    background: var(--bg-sidebar);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    padding: 16px 0;
+    overflow-y: auto;
+    z-index: 999;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background 0.4s ease;
+    transform: translateX(-120%);
+    opacity: 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+
+  #sidebar.open {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 998;
+    display: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .sidebar-overlay.show {
+    display: block !important;
+  }
+
+  .sidebar-profile {
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+  }
+
+  .avatar img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(108,99,255,0.3);
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .avatar img:hover {
+    transform: scale(1.05);
+    border-color: rgba(108,99,255,0.6);
+  }
+
+  .profile-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 8px 0 2px;
+  }
+  .profile-info p {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin: 0;
+  }
+  .status-badge {
+    font-size: 0.65rem;
+    color: #22c55e;
+    display: inline-block;
+    margin-top: 4px;
+    background: rgba(34,197,94,0.15);
+    padding: 2px 14px;
+    border-radius: 20px;
+  }
+
+  .sidebar-menu {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    flex: 1;
+  }
+  .sidebar-menu li {
+    padding: 0 12px;
+    margin-bottom: 1px;
+  }
+  .sidebar-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+  .sidebar-menu li a:hover {
+    color: var(--text-primary);
+    background: rgba(108,99,255,0.08);
+    transform: translateX(4px);
+  }
+  .sidebar-menu li a:hover i {
+    transform: scale(1.1);
+  }
+  .sidebar-menu li.active a {
+    color: #6c63ff;
+    background: rgba(108,99,255,0.12);
+  }
+  .sidebar-menu li a i {
+    width: 22px;
+    text-align: center;
+    font-size: 1rem;
+    transition: transform 0.3s;
+    color: var(--text-secondary);
+  }
+  .sidebar-menu li.active a i {
+    color: #6c63ff;
+  }
+  .sidebar-menu li.divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 8px 20px;
+    padding: 0;
+  }
+  .sidebar-menu li .logout-link {
+    color: #ef4444;
+  }
+  .sidebar-menu li .logout-link:hover {
+    background: rgba(239,68,68,0.12);
+    color: #ef4444;
+  }
+
+  .sidebar-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.55rem;
+    color: var(--text-muted);
+  }
+
+  #sidebar::-webkit-scrollbar {
+    width: 3px;
+  }
+  #sidebar::-webkit-scrollbar-thumb {
+    background: #6c63ff;
+    border-radius: 10px;
+  }
+  #sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (min-width: 1024px) {
+    #sidebar {
+      transform: translateX(0) !important;
+      opacity: 1 !important;
+      left: 20px;
+      top: 76px;
+      bottom: 20px;
+      width: 250px;
+    }
+    #sidebar.closed {
+      transform: translateX(-120%) !important;
+      opacity: 0 !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    #sidebar {
+      left: 16px;
+      top: 72px;
+      bottom: 16px;
+      width: 250px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #sidebar {
+      left: 12px;
+      top: 66px;
+      bottom: 12px;
+      width: 280px;
+      border-radius: 16px;
+    }
+    .avatar img {
+      width: 52px;
+      height: 52px;
+    }
+    .sidebar-menu li a {
+      font-size: 0.85rem;
+      padding: 10px 14px;
+    }
+  }
+</style>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) {
+      sidebar.classList.toggle('open');
+    }
+    if (overlay) {
+      overlay.classList.toggle('show');
+    }
+  }
+
+  function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar) {
+      sidebar.classList.remove('open');
+    }
+    if (overlay) {
+      overlay.classList.remove('show');
+    }
+  }
+
+  document.querySelectorAll('.sidebar-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 1024) {
+        closeSidebar();
+      }
+    });
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        sidebar.classList.add('open');
+      }
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.querySelector('.menu-toggle');
+    if (window.innerWidth < 1024 && sidebar && sidebar.classList.contains('open')) {
+      if (!sidebar.contains(e.target) && !toggle?.contains(e.target)) {
+        closeSidebar();
+      }
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeSidebar();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    if (window.innerWidth >= 1024) {
+      sidebar.classList.add('open');
+    }
+  });
+</script>

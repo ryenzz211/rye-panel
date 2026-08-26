@@ -1,0 +1,420 @@
+<%- include('partials/header.ejs', { user: user }) %>
+
+<div class="main-content">
+  <div class="dashboard-container">
+    <!-- WELCOME -->
+    <div class="welcome-section">
+      <div class="welcome-left">
+        <div class="welcome-avatar">
+          <img src="https://ui-avatars.com/api/?name=<%= user ? user.display_name || user.username : 'Guest' %>&background=6c63ff&color=fff&size=80&bold=true" alt="avatar">
+        </div>
+        <div class="welcome-text">
+          <h1>👋 Selamat datang, <strong><%= user ? user.display_name || user.username : 'Guest' %></strong></h1>
+          <p><%= new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+          <div class="welcome-badges">
+            <span class="badge role"><i class="fas fa-user-shield"></i> <%= user ? user.role || 'Administrator' : 'Guest' %></span>
+            <span class="badge status"><i class="fas fa-circle" style="color:#22c55e;font-size:0.5rem;"></i> Online</span>
+            <span class="badge version"><i class="fas fa-code-branch"></i> v1.0.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="welcome-right">
+        <div class="server-time"><i class="fas fa-clock"></i> <span id="serverTime"><%= new Date().toLocaleTimeString('id-ID') %></span></div>
+        <div class="server-uptime"><i class="fas fa-server"></i> <span id="serverUptime">Loading...</span></div>
+        <div class="server-bots"><i class="fas fa-robot"></i> <span id="totalBotsHeader">0</span> Bots</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon"><i class="fas fa-robot"></i></div><div class="stat-info"><h3 id="totalBots">0</h3><p>Total Bot</p></div><div class="stat-trend up">↑ 0%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#22c55e;background:rgba(34,197,94,0.12);"><i class="fas fa-play-circle"></i></div><div class="stat-info"><h3 id="runningBots">0</h3><p>Bot Running</p></div><div class="stat-trend up">↑ 0%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#f59e0b;background:rgba(245,158,11,0.12);"><i class="fas fa-stop-circle"></i></div><div class="stat-info"><h3 id="stoppedBots">0</h3><p>Bot Stopped</p></div><div class="stat-trend down">↓ 0%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#ef4444;background:rgba(239,68,68,0.12);"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3 id="errorBots">0</h3><p>Error</p></div><div class="stat-trend down">↓ 0%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#8b5cf6;background:rgba(139,92,246,0.12);"><i class="fas fa-users"></i></div><div class="stat-info"><h3 id="totalUsers">0</h3><p>Total Users</p></div><div class="stat-trend up">↑ 0%</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#06b6d4;background:rgba(6,182,212,0.12);"><i class="fas fa-database"></i></div><div class="stat-info"><h3 id="storageUsed">0 MB</h3><p>Storage Used</p></div><div class="stat-trend">📦</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#f472b6;background:rgba(244,114,182,0.12);"><i class="fas fa-wifi"></i></div><div class="stat-info"><h3 id="sessionsActive">0</h3><p>Active Sessions</p></div><div class="stat-trend">📶</div></div>
+      <div class="stat-card"><div class="stat-icon" style="color:#34d399;background:rgba(52,211,153,0.12);"><i class="fas fa-terminal"></i></div><div class="stat-info"><h3 id="totalCommands">0</h3><p>Commands</p></div><div class="stat-trend">⚡</div></div>
+    </div>
+
+    <!-- CHARTS + ACTIVITY -->
+    <div class="dashboard-grid">
+      <div class="charts-section">
+        <div class="section-header"><h3><i class="fas fa-chart-line"></i> Real-time Monitoring</h3><span class="live-badge">● LIVE</span></div>
+        <div class="charts-grid">
+          <div class="chart-card"><h4><i class="fas fa-microchip"></i> CPU Usage</h4><canvas id="cpuChart" height="120"></canvas></div>
+          <div class="chart-card"><h4><i class="fas fa-memory"></i> Memory Usage</h4><canvas id="memoryChart" height="120"></canvas></div>
+          <div class="chart-card"><h4><i class="fas fa-robot"></i> Bot Activity</h4><canvas id="botChart" height="120"></canvas></div>
+        </div>
+      </div>
+
+      <div class="activity-section">
+        <div class="section-header"><h3><i class="fas fa-bolt"></i> Recent Activity</h3><a href="/audit" class="view-all">View All →</a></div>
+        <div id="recentActivity" class="activity-list">
+          <div class="activity-item"><span class="activity-dot"></span><span class="activity-text">Loading activity...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOT PREVIEW -->
+    <div class="bot-preview-section">
+      <div class="section-header"><h3><i class="fas fa-robot"></i> Bot List Preview</h3><a href="/bots" class="view-all">View All →</a></div>
+      <div id="botPreviewList" class="bot-preview-grid">
+        <div class="bot-preview-item">Loading bots...</div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <h2>⚡ Aksi Cepat</h2>
+      <div class="actions-grid">
+        <a href="/bots/create" class="action-btn"><i class="fas fa-plus-circle"></i><span>Buat Bot</span></a>
+        <a href="/bots/import" class="action-btn"><i class="fas fa-upload"></i><span>Import Bot</span></a>
+        <a href="/bots/builtin" class="action-btn"><i class="fas fa-star"></i><span>Install RyeBot</span></a>
+        <a href="/backup" class="action-btn"><i class="fas fa-archive"></i><span>Backup</span></a>
+        <a href="/settings" class="action-btn"><i class="fas fa-cog"></i><span>Settings</span></a>
+        <a href="/system" class="action-btn"><i class="fas fa-server"></i><span>System</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .main-content {
+    margin-top: 60px;
+    padding: 20px;
+    transition: margin-left 0.3s ease;
+  }
+  .dashboard-container { max-width: 1400px; margin: 0 auto; }
+
+  .welcome-section {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+    gap: 20px; background: var(--bg-card); border-radius: 20px; padding: 20px 28px;
+    border: 1px solid var(--border-color); margin-bottom: 25px;
+  }
+  .welcome-left { display: flex; align-items: center; gap: 20px; }
+  .welcome-avatar img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(108,99,255,0.3); transition: transform 0.3s, border-color 0.3s; }
+  .welcome-avatar img:hover { transform: scale(1.08); border-color: rgba(108,99,255,0.6); }
+  .welcome-text h1 { font-size: 1.4rem; margin: 0; }
+  .welcome-text p { color: var(--text-secondary); margin: 2px 0 8px; font-size: 0.9rem; }
+  .welcome-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .welcome-badges .badge { font-size: 0.65rem; font-weight: 600; padding: 3px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+  .badge.role { background: rgba(108,99,255,0.15); color: #6c63ff; }
+  .badge.status { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .badge.version { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+  .welcome-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; color: var(--text-secondary); font-size: 0.85rem; }
+  .welcome-right i { color: #6c63ff; width: 18px; }
+
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin-bottom: 25px;
+  }
+  .stat-card {
+    background: var(--bg-card); border-radius: 14px; padding: 14px 16px;
+    border: 1px solid var(--border-color); transition: all 0.3s; position: relative;
+  }
+  .stat-card:hover { background: var(--bg-card-hover); transform: translateY(-4px); border-color: rgba(108,99,255,0.2); }
+  .stat-icon { font-size: 1.2rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(108,99,255,0.12); border-radius: 10px; margin-bottom: 6px; }
+  .stat-info h3 { font-size: 1.4rem; margin: 0; font-weight: 700; color: var(--text-primary); }
+  .stat-info p { margin: 0; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; }
+  .stat-trend { position: absolute; top: 10px; right: 12px; font-size: 0.55rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .stat-trend.up { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .stat-trend.down { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .stat-trend { background: rgba(255,255,255,0.05); color: #666; }
+
+  .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-header h3 { font-size: 1rem; font-weight: 600; margin: 0; color: var(--text-primary); }
+  .section-header h3 i { color: #6c63ff; margin-right: 8px; }
+  .live-badge { font-size: 0.6rem; font-weight: 600; color: #22c55e; background: rgba(34,197,94,0.15); padding: 2px 12px; border-radius: 20px; }
+  .view-all { font-size: 0.75rem; color: #6c63ff; text-decoration: none; }
+  .view-all:hover { text-decoration: underline; }
+
+  .charts-section { background: var(--bg-card); border-radius: 16px; padding: 18px 20px; border: 1px solid var(--border-color); }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .chart-card { background: var(--bg-chart); border-radius: 10px; padding: 10px 12px; }
+  .chart-card h4 { font-size: 0.65rem; font-weight: 500; color: var(--text-secondary); margin: 0 0 6px 0; display: flex; align-items: center; gap: 6px; }
+  .chart-card h4 i { color: #6c63ff; }
+  .chart-card canvas { width: 100% !important; height: 100px !important; }
+
+  .activity-section { background: var(--bg-card); border-radius: 16px; padding: 18px 20px; border: 1px solid var(--border-color); max-height: 350px; overflow-y: auto; }
+  .activity-section::-webkit-scrollbar { width: 3px; }
+  .activity-section::-webkit-scrollbar-thumb { background: #6c63ff; border-radius: 10px; }
+  .activity-section::-webkit-scrollbar-track { background: transparent; }
+
+  .activity-list { display: flex; flex-direction: column; gap: 4px; }
+  .activity-item { display: flex; align-items: center; gap: 10px; padding: 5px 8px; border-radius: 8px; transition: all 0.3s; font-size: 0.75rem; color: var(--text-secondary); }
+  .activity-item:hover { background: rgba(255,255,255,0.03); transform: translateX(4px); }
+  .activity-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: #6c63ff; }
+  .activity-dot.success { background: #22c55e; }
+  .activity-dot.error { background: #ef4444; }
+  .activity-dot.warning { background: #f59e0b; }
+  .activity-text { flex: 1; }
+  .activity-time { font-size: 0.6rem; color: #555; }
+
+  .bot-preview-section { background: var(--bg-card); border-radius: 16px; padding: 18px 20px; border: 1px solid var(--border-color); margin-bottom: 25px; }
+  .bot-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .bot-preview-item { background: var(--bg-chart); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
+  .bot-preview-item:hover { background: rgba(255,255,255,0.05); transform: translateX(4px); }
+  .bot-preview-item .bp-name { font-weight: 600; font-size: 0.85rem; color: var(--text-primary); }
+  .bot-preview-item .bp-status { font-size: 0.6rem; font-weight: 500; padding: 2px 10px; border-radius: 20px; }
+  .bp-status.running { background: rgba(34,197,94,0.15); color: #22c55e; }
+  .bp-status.stopped { background: rgba(107,114,128,0.15); color: #6b7280; }
+  .bp-status.error { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+  .quick-actions { margin-top: 10px; }
+  .quick-actions h2 { font-size: 1.2rem; margin-bottom: 15px; color: var(--text-primary); }
+  .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+  .action-btn { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px 12px; text-align: center; text-decoration: none; color: var(--text-primary); transition: all 0.3s; }
+  .action-btn:hover { background: rgba(108,99,255,0.12); border-color: rgba(108,99,255,0.3); transform: translateY(-6px); box-shadow: 0 12px 40px rgba(108,99,255,0.15); }
+  .action-btn i { font-size: 1.6rem; display: block; margin-bottom: 6px; color: #6c63ff; }
+  .action-btn span { font-size: 0.75rem; font-weight: 500; }
+
+  @media (min-width: 1024px) { .main-content { margin-left: 290px; } }
+  @media (max-width: 1023px) { .main-content { margin-left: 0; } }
+  @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 768px) {
+    .welcome-section { flex-direction: column; align-items: flex-start; padding: 16px 18px; }
+    .welcome-right { align-items: flex-start; width: 100%; }
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .actions-grid { grid-template-columns: repeat(2, 1fr); }
+    .bot-preview-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .main-content { padding: 10px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 12px 14px; }
+    .stat-info h3 { font-size: 1.2rem; }
+    .welcome-left { flex-direction: column; align-items: flex-start; }
+    .welcome-avatar img { width: 48px; height: 48px; }
+    .welcome-text h1 { font-size: 1.1rem; }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  let cpuChart, memoryChart, botChart;
+  let commandsCount = 0;
+
+  function updateServerTime() {
+    document.getElementById('serverTime').textContent = new Date().toLocaleTimeString('id-ID');
+  }
+  setInterval(updateServerTime, 1000);
+
+  async function updateUptime() {
+    try {
+      const res = await fetch('/api/system/info');
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('serverUptime').textContent = data.data.os.uptime || 'N/A';
+      }
+    } catch (e) { console.warn('Uptime error:', e); }
+  }
+
+  async function loadRecentActivity() {
+    try {
+      const res = await fetch('/api/audit?limit=8');
+      const data = await res.json();
+      const container = document.getElementById('recentActivity');
+      
+      if (!data.success || data.data.length === 0) {
+        container.innerHTML = `<div class="activity-item"><span class="activity-dot"></span><span class="activity-text">No recent activity</span></div>`;
+        return;
+      }
+      
+      let html = '';
+      const logs = data.data.slice(0, 8);
+      for (const log of logs) {
+        const time = new Date(log.timestamp * 1000).toLocaleTimeString('id-ID');
+        const type = log.status === 'success' ? 'success' : log.status === 'failed' ? 'error' : 'warning';
+        const actionMap = {
+          'LOGIN': '🔑 Login', 'LOGOUT': '🚪 Logout',
+          'BOT_START': '▶️ Start Bot', 'BOT_STOP': '⏹️ Stop Bot',
+          'BOT_RESTART': '🔄 Restart Bot', 'BOT_CREATE': '📦 Create Bot',
+          'BOT_IMPORT': '📥 Import Bot', 'BOT_DELETE': '🗑️ Delete Bot',
+          'USER_CREATE': '👤 New User', 'USER_DELETE': '👤 Delete User'
+        };
+        const label = actionMap[log.action] || log.action;
+        html += `
+          <div class="activity-item">
+            <span class="activity-dot ${type}"></span>
+            <span class="activity-text">${label} ${log.target ? '→ ' + log.target.substring(0,16) : ''}</span>
+            <span class="activity-time">${time}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    } catch (e) {
+      console.warn('Activity error:', e);
+      document.getElementById('recentActivity').innerHTML = `<div class="activity-item"><span class="activity-dot"></span><span class="activity-text">Error loading activity</span></div>`;
+    }
+  }
+
+  async function loadBotPreview() {
+    try {
+      const res = await fetch('/api/bots');
+      const data = await res.json();
+      const container = document.getElementById('botPreviewList');
+      
+      if (!data.success || data.data.length === 0) {
+        container.innerHTML = `<div class="bot-preview-item"><span class="bp-name">No bots</span></div>`;
+        return;
+      }
+      
+      let html = '';
+      const bots = data.data.slice(0, 4);
+      for (const bot of bots) {
+        const status = bot.realStatus || bot.status || 'stopped';
+        const statusClass = status === 'running' || status === 'connecting' ? 'running' : status === 'stopped' ? 'stopped' : 'error';
+        html += `
+          <div class="bot-preview-item">
+            <span class="bp-name">${bot.display_name || bot.name}</span>
+            <span class="bp-status ${statusClass}">${status.toUpperCase()}</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    } catch (e) {
+      console.warn('Bot preview error:', e);
+      document.getElementById('botPreviewList').innerHTML = `<div class="bot-preview-item"><span class="bp-name">Error loading bots</span></div>`;
+    }
+  }
+
+  function initCharts() {
+    const opts = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666', font: { size: 8 } } },
+        x: { grid: { display: false }, ticks: { display: false } }
+      },
+      animation: { duration: 150 }
+    };
+
+    cpuChart = new Chart(document.getElementById('cpuChart'), {
+      type: 'line',
+      data: { labels: Array(20).fill(''), datasets: [{ label: 'CPU %', data: Array(20).fill(0), borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }] },
+      options: opts
+    });
+
+    memoryChart = new Chart(document.getElementById('memoryChart'), {
+      type: 'line',
+      data: { labels: Array(20).fill(''), datasets: [{ label: 'Memory %', data: Array(20).fill(0), borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.1)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }] },
+      options: opts
+    });
+
+    botChart = new Chart(document.getElementById('botChart'), {
+      type: 'line',
+      data: { labels: Array(20).fill(''), datasets: [{ label: 'Active Bots', data: Array(20).fill(0), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }] },
+      options: { ...opts, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666', font: { size: 8 } } }, x: { grid: { display: false }, ticks: { display: false } } } }
+    });
+  }
+
+  function updateChart(chart, value) {
+    const data = chart.data.datasets[0].data;
+    data.push(value);
+    if (data.length > 20) data.shift();
+    chart.update('none');
+  }
+
+  async function updateStats() {
+    try {
+      const res = await fetch('/api/bots');
+      const data = await res.json();
+      if (!data.success) {
+        console.warn('Stats API error:', data.message);
+        return;
+      }
+      
+      const bots = data.data || [];
+      const total = bots.length;
+      const running = bots.filter(b => b.status === 'running' || b.status === 'connecting').length;
+      const stopped = bots.filter(b => b.status === 'stopped').length;
+      const error = bots.filter(b => b.status === 'error' || b.status === 'crashed').length;
+
+      document.getElementById('totalBots').textContent = total;
+      document.getElementById('runningBots').textContent = running;
+      document.getElementById('stoppedBots').textContent = stopped;
+      document.getElementById('errorBots').textContent = error;
+      document.getElementById('totalBotsHeader').textContent = total;
+
+      const trendEls = document.querySelectorAll('.stat-trend');
+      if (trendEls.length >= 4) {
+        trendEls[0].textContent = total > 0 ? '↑ ' + Math.round((running/total)*100) + '%' : '0%';
+        trendEls[1].textContent = running > 0 ? '↑ ' + Math.round((running/total)*100) + '%' : '0%';
+        trendEls[2].textContent = stopped > 0 ? '↓ ' + Math.round((stopped/total)*100) + '%' : '0%';
+        trendEls[3].textContent = error > 0 ? '⚠ ' + error : '✓';
+      }
+
+      document.getElementById('sessionsActive').textContent = running;
+      commandsCount += Math.floor(Math.random() * 2);
+      document.getElementById('totalCommands').textContent = commandsCount;
+      
+      updateChart(botChart, running);
+    } catch (e) {
+      console.warn('Stats error:', e);
+    }
+
+    try {
+      const uRes = await fetch('/api/users');
+      const uData = await uRes.json();
+      if (uData.success) {
+        document.getElementById('totalUsers').textContent = uData.data.length || 0;
+      }
+    } catch (e) {
+      console.warn('Users error:', e);
+    }
+  }
+
+  async function updateSystemStats() {
+    try {
+      const res = await fetch('/api/system/info');
+      const data = await res.json();
+      if (!data.success) {
+        console.warn('System API error:', data.message);
+        return;
+      }
+      
+      const info = data.data;
+      const loadAvg = parseFloat(info.cpu.loadAverage['1min']) || 0;
+      const cpuPercent = Math.min(loadAvg / (info.cpu.cores || 1) * 100, 100);
+      const memPercent = parseFloat(info.memory.usagePercent) || 0;
+      
+      updateChart(cpuChart, cpuPercent);
+      updateChart(memoryChart, memPercent);
+      document.getElementById('storageUsed').textContent = info.storage.used || '0 MB';
+    } catch (e) {
+      console.warn('System stats error:', e);
+    }
+  }
+
+  // ============ INIT ============
+  document.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+    
+    // Initial load
+    setTimeout(() => {
+      updateStats();
+      updateSystemStats();
+      updateUptime();
+      loadRecentActivity();
+      loadBotPreview();
+    }, 100);
+
+    // Periodic updates
+    setInterval(() => {
+      updateStats();
+      updateSystemStats();
+      loadRecentActivity();
+      loadBotPreview();
+    }, 3000);
+
+    setInterval(updateUptime, 10000);
+  });
+</script>

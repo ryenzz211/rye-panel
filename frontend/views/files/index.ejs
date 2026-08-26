@@ -1,0 +1,149 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="files-container">
+  <div class="files-header">
+    <div>
+      <h2><i class="fas fa-folder-open"></i> File Manager</h2>
+      <p>Kelola file dan folder panel</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="window.location.href='/dashboard'" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </button>
+    </div>
+  </div>
+
+  <div class="files-info">
+    <p style="color:var(--text-secondary, #888);">
+      📁 File Manager untuk mengelola file bot. Pilih bot dari halaman 
+      <a href="/bots" style="color:#6c63ff;text-decoration:none;">Bots</a> 
+      untuk mengakses file masing-masing bot.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px;">
+      <a href="/bots" class="file-card-link">
+        <div class="file-card">
+          <i class="fas fa-robot" style="font-size:2rem;color:#6c63ff;"></i>
+          <h3>Bot Files</h3>
+          <p>Kelola file bot WhatsApp</p>
+        </div>
+      </a>
+      <a href="/settings" class="file-card-link">
+        <div class="file-card">
+          <i class="fas fa-cog" style="font-size:2rem;color:#f59e0b;"></i>
+          <h3>Settings</h3>
+          <p>Pengaturan panel</p>
+        </div>
+      </a>
+      <a href="/backup" class="file-card-link">
+        <div class="file-card">
+          <i class="fas fa-archive" style="font-size:2rem;color:#22c55e;"></i>
+          <h3>Backup</h3>
+          <p>Backup & restore data</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .files-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 60px auto 0 0;
+  }
+
+  .files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .files-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .files-header h2 i {
+    color: #6c63ff;
+  }
+
+  .files-header p {
+    color: var(--text-secondary, #888);
+    margin: 0;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-color, #fff);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.15);
+  }
+
+  .files-info {
+    background: var(--bg-card, rgba(255,255,255,0.04));
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+  }
+
+  .file-card-link {
+    text-decoration: none;
+    color: var(--text-color, #fff);
+  }
+
+  .file-card {
+    background: var(--bg-card-hover, rgba(255,255,255,0.04));
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    transition: all 0.3s;
+  }
+
+  .file-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(108,99,255,0.2);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+  }
+
+  .file-card h3 {
+    margin: 10px 0 4px;
+    font-size: 1rem;
+  }
+
+  .file-card p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #888);
+  }
+
+  @media (min-width: 1024px) {
+    .files-container { margin-left: 0; }
+  }
+
+  @media (max-width: 768px) {
+    .files-container { padding: 10px; margin: 60px 10px 0; }
+    .files-header { flex-direction: column; align-items: stretch; }
+  }
+</style>

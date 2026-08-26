@@ -1,0 +1,274 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="dev-container">
+  <div class="dev-header">
+    <h1><i class="fas fa-code"></i> Developer</h1>
+    <p>Informasi tentang panel dan developer</p>
+  </div>
+
+  <div class="dev-grid">
+    <!-- Panel Info -->
+    <div class="dev-card">
+      <h3><i class="fas fa-cube"></i> Panel</h3>
+      <div class="dev-info">
+        <div class="info-row"><span class="label">Name</span><span class="value">Rye Panel</span></div>
+        <div class="info-row"><span class="label">Version</span><span class="value">v1.0.0</span></div>
+        <div class="info-row"><span class="label">Release Year</span><span class="value">2026</span></div>
+        <div class="info-row"><span class="label">Platform</span><span class="value">Termux / Android</span></div>
+        <div class="info-row"><span class="label">Default Port</span><span class="value">1945 / 3000</span></div>
+        <div class="info-row"><span class="label">Status</span><span class="value"><span class="status-badge active">● Active Development</span></span></div>
+      </div>
+    </div>
+
+    <!-- Developer Info -->
+    <div class="dev-card">
+      <h3><i class="fas fa-user-cog"></i> Developer</h3>
+      <div class="dev-info">
+        <div class="info-row"><span class="label">Name</span><span class="value"><strong>Ryenz Developer</strong></span></div>
+        <div class="info-row"><span class="label">Product</span><span class="value">Rye Panel — Multi WhatsApp Bot Management System</span></div>
+        <div class="info-row"><span class="label">License</span><span class="value">Private / Custom</span></div>
+        <div class="info-row"><span class="label">Maintainer</span><span class="value">Ryenz</span></div>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="dev-card">
+      <h3><i class="fas fa-layer-group"></i> Tech Stack</h3>
+      <div class="dev-tech">
+        <div class="tech-item"><span class="tech-name">Backend</span><span class="tech-value">Node.js, Express.js, WebSocket</span></div>
+        <div class="tech-item"><span class="tech-name">Database</span><span class="tech-value">SQLite3 (in-memory + JSON)</span></div>
+        <div class="tech-item"><span class="tech-name">Frontend</span><span class="tech-value">EJS, Vanilla JS, CSS3</span></div>
+        <div class="tech-item"><span class="tech-name">Realtime</span><span class="tech-value">WebSocket (ws)</span></div>
+        <div class="tech-item"><span class="tech-name">Charts</span><span class="tech-value">Chart.js</span></div>
+        <div class="tech-item"><span class="tech-name">WhatsApp</span><span class="tech-value">Baileys Library</span></div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="dev-card">
+      <h3><i class="fas fa-star"></i> Features</h3>
+      <div class="dev-features">
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Multi WhatsApp Bot Management</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Import Bot from ZIP</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Real-time Terminal</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Session Manager</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> File Manager with Editor</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Environment Variables</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Backup & Restore</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Built-in RyeBot</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Audit Logs</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Dark/Light Theme</div>
+        <div class="feature-item"><i class="fas fa-check-circle" style="color:#22c55e;"></i> Mobile Responsive</div>
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="dev-card">
+      <h3><i class="fas fa-link"></i> Links</h3>
+      <div class="dev-links">
+        <a href="#" class="dev-link" onclick="alert('GitHub URL coming soon!')">
+          <i class="fab fa-github"></i> GitHub
+        </a>
+        <a href="#" class="dev-link" onclick="alert('Website coming soon!')">
+          <i class="fas fa-globe"></i> Website
+        </a>
+        <a href="#" class="dev-link" onclick="alert('Contact coming soon!')">
+          <i class="fas fa-envelope"></i> Contact
+        </a>
+        <a href="#" class="dev-link" onclick="alert('Documentation coming soon!')">
+          <i class="fas fa-book"></i> Documentation
+        </a>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="dev-card copyright">
+      <h3><i class="fas fa-copyright"></i> Copyright</h3>
+      <p class="copyright-text">
+        &copy; 2026 <strong>Ryenz Developer</strong>. All Rights Reserved.
+      </p>
+      <p class="copyright-text" style="font-size:0.8rem;color:#666;">
+        Rye Panel — Multi WhatsApp Bot Management System
+      </p>
+      <p class="copyright-text" style="font-size:0.7rem;color:#555;margin-top:8px;">
+        Built with ❤️ for Termux & Android
+      </p>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user, currentPath: currentPath }) %>
+
+<style>
+  .dev-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 60px auto 0 0;
+  }
+
+  .dev-header {
+    margin-bottom: 25px;
+  }
+
+  .dev-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .dev-header h1 i {
+    color: #6c63ff;
+  }
+
+  .dev-header p {
+    color: var(--text-secondary, #888);
+    margin: 5px 0 0;
+  }
+
+  .dev-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .dev-card {
+    background: var(--bg-card, rgba(255,255,255,0.04));
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    transition: all 0.3s;
+  }
+
+  .dev-card:hover {
+    background: var(--bg-card-hover, rgba(255,255,255,0.07));
+    transform: translateY(-2px);
+  }
+
+  .dev-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: var(--text-primary, #ddd);
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dev-card h3 i {
+    color: #6c63ff;
+  }
+
+  .dev-info .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+
+  .dev-info .info-row .label {
+    color: var(--text-secondary, #888);
+  }
+
+  .dev-info .info-row .value {
+    color: var(--text-primary, #ddd);
+    text-align: right;
+    max-width: 60%;
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    color: #22c55e;
+    background: rgba(34,197,94,0.15);
+    padding: 2px 12px;
+    border-radius: 20px;
+  }
+
+  .dev-tech .tech-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+
+  .dev-tech .tech-item .tech-name {
+    color: var(--text-secondary, #888);
+  }
+
+  .dev-tech .tech-item .tech-value {
+    color: var(--text-primary, #ddd);
+    text-align: right;
+    font-weight: 500;
+  }
+
+  .dev-features .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #aaa);
+  }
+
+  .dev-features .feature-item i {
+    width: 18px;
+  }
+
+  .dev-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .dev-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    color: var(--text-primary, #ddd);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    justify-content: center;
+  }
+
+  .dev-link:hover {
+    background: rgba(108,99,255,0.1);
+    border-color: rgba(108,99,255,0.2);
+    transform: translateY(-2px);
+  }
+
+  .dev-link i {
+    font-size: 1.1rem;
+    color: #6c63ff;
+  }
+
+  .copyright {
+    text-align: center;
+  }
+
+  .copyright .copyright-text {
+    margin: 4px 0;
+    color: var(--text-secondary, #888);
+  }
+
+  @media (min-width: 1024px) {
+    .dev-container { margin-left: 0; }
+  }
+
+  @media (max-width: 768px) {
+    .dev-container { padding: 10px; margin: 60px 10px 0; }
+    .dev-grid { grid-template-columns: 1fr; }
+    .dev-links { grid-template-columns: 1fr; }
+    .dev-info .info-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .dev-info .info-row .value { text-align: left; max-width: 100%; }
+    .dev-tech .tech-item { flex-direction: column; align-items: flex-start; gap: 2px; }
+    .dev-tech .tech-item .tech-value { text-align: left; }
+  }
+</style>

@@ -1,0 +1,470 @@
+<%- include('../partials/header.ejs', { user: user }) %>
+
+<div class="settings-container">
+  <div class="settings-header">
+    <h2><i class="fas fa-cog"></i> Settings</h2>
+    <p>Kelola pengaturan panel</p>
+  </div>
+
+  <form id="settingsForm" class="settings-form">
+    <!-- GENERAL -->
+    <div class="settings-card">
+      <h3>⚙️ General</h3>
+      
+      <div class="form-group">
+        <label>Panel Name</label>
+        <input type="text" id="panel_name" placeholder="Rye Panel" class="settings-input">
+      </div>
+      
+      <div class="form-group">
+        <label>🌓 Theme</label>
+        <select id="theme" class="settings-select" onchange="previewTheme(this.value)">
+          <option value="dark">🌙 Dark</option>
+          <option value="light">☀️ Light</option>
+          <option value="auto">🔄 Auto (System)</option>
+        </select>
+        <div id="themePreview" style="margin-top:10px;padding:14px;border-radius:10px;background:#1a1a2e;border:2px solid rgba(108,99,255,0.3);transition:all 0.3s;">
+          <span id="themePreviewText" style="color:#fff;font-weight:500;">🌙 Dark Mode - Tampilan gelap</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>🌐 Language</label>
+        <select id="language" class="settings-select">
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SERVER -->
+    <div class="settings-card">
+      <h3>🖥️ Server</h3>
+      <div class="form-group">
+        <label>Port</label>
+        <input type="number" id="port" placeholder="3000" class="settings-input">
+        <small>⚠️ Restart panel untuk apply</small>
+      </div>
+      <div class="form-group">
+        <label>Host</label>
+        <input type="text" id="host" placeholder="0.0.0.0" class="settings-input">
+        <small>⚠️ Restart panel untuk apply</small>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="settings-card">
+      <h3>📊 Dashboard</h3>
+      <div class="form-group">
+        <label>Auto Refresh</label>
+        <select id="auto_refresh" class="settings-select">
+          <option value="true">✅ On</option>
+          <option value="false">❌ Off</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Refresh Interval (detik)</label>
+        <input type="number" id="refresh_interval" placeholder="5" min="2" max="60" class="settings-input">
+      </div>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="settings-card">
+      <h3>🔧 System</h3>
+      <div class="form-group">
+        <label>Log Retention (hari)</label>
+        <input type="number" id="log_retention" placeholder="7" min="1" max="90" class="settings-input">
+      </div>
+      <div class="form-group">
+        <label>Max Bots</label>
+        <input type="number" id="max_bots" placeholder="50" min="1" max="999" class="settings-input">
+      </div>
+      <div class="form-group">
+        <label>Maintenance Mode</label>
+        <select id="maintenance_mode" class="settings-select">
+          <option value="false">Off</option>
+          <option value="true">🔧 On</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="settings-actions">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> Save Settings
+      </button>
+      <button type="button" onclick="resetSettings()" class="btn btn-secondary">
+        <i class="fas fa-undo"></i> Reset Default
+      </button>
+      <a href="/dashboard" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+      </a>
+    </div>
+
+    <div id="saveMessage" style="display:none;margin-top:15px;padding:12px;border-radius:10px;text-align:center;"></div>
+  </form>
+</div>
+
+<%- include('../partials/sidebar.ejs', { user: user }) %>
+
+<style>
+  .settings-container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 60px auto 0 0;
+  }
+
+  .settings-header {
+    margin-bottom: 25px;
+  }
+
+  .settings-header h2 {
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .settings-header h2 i {
+    color: #6c63ff;
+  }
+
+  .settings-header p {
+    color: #888;
+    margin: 5px 0 0;
+  }
+
+  .settings-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: background 0.3s ease, border-color 0.3s ease;
+  }
+
+  .settings-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    color: #ddd;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 10px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+    color: #bbb;
+  }
+
+  .settings-input,
+  .settings-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1) !important;
+    color: #ffffff !important;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+
+  .settings-input::placeholder {
+    color: #999 !important;
+  }
+
+  .settings-input:focus,
+  .settings-select:focus {
+    outline: none;
+    border-color: #6c63ff;
+    background: rgba(255,255,255,0.15) !important;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+  }
+
+  .settings-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  .settings-select option {
+    background: #1a1a2e !important;
+    color: #fff !important;
+  }
+
+  .form-group small {
+    display: block;
+    color: #888;
+    font-size: 0.75rem;
+    margin-top: 4px;
+  }
+
+  #themePreview {
+    padding: 14px;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(108, 99, 255, 0.3);
+  }
+
+  #themePreview.dark-preview {
+    background: #1a1a2e;
+    border-color: rgba(108, 99, 255, 0.3);
+  }
+  #themePreview.dark-preview #themePreviewText { color: #fff; }
+
+  #themePreview.light-preview {
+    background: #f0f0f0;
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+  #themePreview.light-preview #themePreviewText { color: #1a1a2e; }
+
+  #themePreview.auto-preview {
+    background: linear-gradient(135deg, #1a1a2e 50%, #f0f0f0 50%);
+    border-color: rgba(108, 99, 255, 0.5);
+  }
+  #themePreview.auto-preview #themePreviewText {
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  #themePreviewText {
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #6c63ff;
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #5a52e0;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.18);
+  }
+
+  #saveMessage.success {
+    background: rgba(34,197,94,0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  #saveMessage.error {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+
+  @media (max-width: 768px) {
+    .settings-container {
+      margin: 60px 10px 0 10px;
+      padding: 10px;
+    }
+    .settings-card {
+      padding: 16px;
+    }
+    .settings-actions {
+      flex-direction: column;
+    }
+    .settings-actions .btn {
+      justify-content: center;
+    }
+  }
+</style>
+
+<script>
+  async function loadSettings() {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+
+      if (data.success) {
+        const settings = data.data;
+        document.getElementById('panel_name').value = settings.panel_name || 'Rye Panel';
+        const theme = localStorage.getItem('rye-theme') || settings.theme || 'dark';
+        document.getElementById('theme').value = theme;
+        document.getElementById('language').value = settings.language || 'id';
+        document.getElementById('port').value = settings.port || '3000';
+        document.getElementById('host').value = settings.host || '0.0.0.0';
+        document.getElementById('auto_refresh').value = settings.auto_refresh || 'true';
+        document.getElementById('refresh_interval').value = settings.refresh_interval || '5';
+        document.getElementById('log_retention').value = settings.log_retention || '7';
+        document.getElementById('max_bots').value = settings.max_bots || '50';
+        document.getElementById('maintenance_mode').value = settings.maintenance_mode || 'false';
+        
+        previewTheme(theme);
+      } else {
+        showMessage('Gagal load settings: ' + data.message, 'error');
+      }
+    } catch (error) {
+      showMessage('Error: ' + error.message, 'error');
+    }
+  }
+
+  function previewTheme(theme) {
+    const preview = document.getElementById('themePreview');
+    const text = document.getElementById('themePreviewText');
+    if (!preview) return;
+    
+    preview.className = '';
+    if (theme === 'dark') {
+      preview.classList.add('dark-preview');
+      text.textContent = '🌙 Dark Mode - Tampilan gelap';
+    } else if (theme === 'light') {
+      preview.classList.add('light-preview');
+      text.textContent = '☀️ Light Mode - Tampilan terang';
+    } else {
+      preview.classList.add('auto-preview');
+      text.textContent = '🔄 Auto - Mengikuti sistem';
+    }
+  }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    
+    const theme = document.getElementById('theme').value;
+    const data = {
+      panel_name: document.getElementById('panel_name').value,
+      theme: theme,
+      language: document.getElementById('language').value,
+      port: document.getElementById('port').value,
+      host: document.getElementById('host').value,
+      auto_refresh: document.getElementById('auto_refresh').value,
+      refresh_interval: document.getElementById('refresh_interval').value,
+      log_retention: document.getElementById('log_retention').value,
+      max_bots: document.getElementById('max_bots').value,
+      maintenance_mode: document.getElementById('maintenance_mode').value
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        // Save theme to localStorage
+        localStorage.setItem('rye-theme', theme);
+        // Apply theme globally
+        if (window.applyTheme) {
+          window.applyTheme(theme);
+        }
+        showMessage('✅ Settings berhasil disimpan!', 'success');
+      } else {
+        showMessage('❌ ' + result.message, 'error');
+      }
+    } catch (error) {
+      showMessage('Error: ' + error.message, 'error');
+    }
+  }
+
+  async function resetSettings() {
+    if (!confirm('Reset semua settings ke default?')) return;
+
+    const defaultSettings = {
+      panel_name: 'Rye Panel',
+      theme: 'dark',
+      language: 'id',
+      port: '3000',
+      host: '0.0.0.0',
+      auto_refresh: 'true',
+      refresh_interval: '5',
+      log_retention: '7',
+      max_bots: '50',
+      maintenance_mode: 'false'
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(defaultSettings)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        localStorage.setItem('rye-theme', 'dark');
+        if (window.applyTheme) {
+          window.applyTheme('dark');
+        }
+        showMessage('✅ Settings direset ke default!', 'success');
+        loadSettings();
+      } else {
+        showMessage('❌ ' + result.message, 'error');
+      }
+    } catch (error) {
+      showMessage('Error: ' + error.message, 'error');
+    }
+  }
+
+  function showMessage(text, type) {
+    const el = document.getElementById('saveMessage');
+    el.textContent = text;
+    el.className = type;
+    el.style.display = 'block';
+    setTimeout(() => {
+      el.style.display = 'none';
+    }, 5000);
+  }
+
+  document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+  loadSettings();
+
+  // Listen for theme changes from header
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'rye-theme') {
+      const theme = e.newValue || 'dark';
+      document.getElementById('theme').value = theme;
+      previewTheme(theme);
+    }
+  });
+</script>
