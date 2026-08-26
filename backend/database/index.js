@@ -8,11 +8,9 @@ const FULL_DB_PATH = path.resolve(process.cwd(), DB_PATH);
 
 console.log('[DB] Path:', FULL_DB_PATH);
 
-// Ensure data directory exists
 const dbDir = path.dirname(FULL_DB_PATH);
 fs.ensureDirSync(dbDir);
 
-// In-memory data store
 const store = {
   users: [],
   bots: [],
@@ -33,14 +31,9 @@ const store = {
     maintenance_mode: 'false',
     language: 'id'
   },
-  _nextIds: {
-    users: 1,
-    bot_logs: 1,
-    audit_logs: 1
-  }
+  _nextIds: { users: 1, bot_logs: 1, audit_logs: 1 }
 };
 
-// Load data from file
 const loadData = () => {
   try {
     if (fs.existsSync(FULL_DB_PATH)) {
@@ -59,7 +52,6 @@ const loadData = () => {
   }
 };
 
-// Save data to file
 const saveData = () => {
   try {
     fs.writeFileSync(FULL_DB_PATH, JSON.stringify(store, null, 2));
@@ -68,7 +60,6 @@ const saveData = () => {
   }
 };
 
-// Initialize
 loadData();
 
 export const initDB = async () => {
@@ -77,11 +68,7 @@ export const initDB = async () => {
 };
 
 export const getDb = async () => store;
-
-export const saveDb = async () => {
-  saveData();
-  console.log('[DB] Data saved');
-};
+export const saveDb = async () => { saveData(); console.log('[DB] Data saved'); };
 
 export const migrate = async () => {
   console.log('[DB] Running migration...');
@@ -89,15 +76,12 @@ export const migrate = async () => {
   console.log('[DB] Migration completed');
 };
 
-// ============ SEED DATA ============
 export const seedData = async () => {
   if (store.users.length > 0) {
     console.log('[DB] Data already seeded');
     return;
   }
-  
   console.log('[DB] Seeding initial data...');
-  
   const hashed = await bcrypt.hash('admin123', 10);
   store.users.push({
     id: store._nextIds.users++,
@@ -111,7 +95,6 @@ export const seedData = async () => {
     created_at: Math.floor(Date.now() / 1000),
     updated_at: Math.floor(Date.now() / 1000)
   });
-  
   store.bots.push({
     id: 'sample-bot-1',
     name: 'Sample Bot',
@@ -139,32 +122,11 @@ export const seedData = async () => {
     workspace_path: './data/bots/sample-bot-1',
     owner_id: 1
   });
-  
-  // Add 5 sample audit logs
-  const actions = ['LOGIN', 'BOT_START', 'BOT_STOP', 'BOT_CREATE', 'LOGOUT'];
-  const targets = ['admin', 'sample-bot-1', 'test-user'];
-  for (let i = 0; i < 5; i++) {
-    const action = actions[i % actions.length];
-    const target = targets[i % targets.length];
-    store.audit_logs.push({
-      id: store._nextIds.audit_logs++,
-      user_id: 1,
-      action: action,
-      target: target,
-      status: 'success',
-      details: `Sample ${action} log ${i+1}`,
-      ip: '127.0.0.1',
-      timestamp: Math.floor(Date.now() / 1000) - (i * 60)
-    });
-  }
-  
   saveData();
-  console.log('[DB] Seeded: 1 admin, 1 bot, 5 audit logs');
+  console.log('[DB] Seeded: 1 admin, 1 bot');
 };
 
-// ============ QUERY HELPERS ============
 export const run = async (sql, params = []) => {
-  // INSERT INTO users
   if (sql.includes('INSERT INTO users')) {
     const user = {
       id: store._nextIds.users++,
@@ -182,113 +144,6 @@ export const run = async (sql, params = []) => {
     saveData();
     return { changes: 1, lastInsertRowid: user.id };
   }
-  
-  // UPDATE users
-  if (sql.includes('UPDATE users SET')) {
-    const userId = params[params.length - 1];
-    const user = store.users.find(u => u.id === userId);
-    if (user) {
-      if (sql.includes('last_active')) user.last_active = Math.floor(Date.now() / 1000);
-      if (sql.includes('status')) user.status = params[0];
-      if (sql.includes('role')) user.role = params[0];
-      if (sql.includes('display_name')) user.display_name = params[0];
-      if (sql.includes('email')) user.email = params[0];
-      if (sql.includes('password_hash')) user.password_hash = params[0];
-      user.updated_at = Math.floor(Date.now() / 1000);
-      saveData();
-      return { changes: 1 };
-    }
-    return { changes: 0 };
-  }
-  
-  // DELETE FROM users
-  if (sql.includes('DELETE FROM users')) {
-    const userId = params[0];
-    const index = store.users.findIndex(u => u.id === userId);
-    if (index !== -1) {
-      const admins = store.users.filter(u => u.role === 'admin');
-      if (store.users[index].role === 'admin' && admins.length <= 1) {
-        throw new Error('Cannot delete last admin');
-      }
-      store.users.splice(index, 1);
-      saveData();
-      return { changes: 1 };
-    }
-    return { changes: 0 };
-  }
-  
-  // INSERT INTO system_settings
-  if (sql.includes('INSERT INTO system_settings')) {
-    store.system_settings[params[0]] = params[1];
-    saveData();
-    return { changes: 1 };
-  }
-  
-  // INSERT OR REPLACE INTO system_settings
-  if (sql.includes('INSERT OR REPLACE INTO system_settings')) {
-    store.system_settings[params[0]] = params[1];
-    saveData();
-    return { changes: 1 };
-  }
-  
-  // INSERT INTO audit_logs
-  if (sql.includes('INSERT INTO audit_logs')) {
-    const log = {
-      id: store._nextIds.audit_logs++,
-      user_id: params[0] || null,
-      action: params[1],
-      target: params[2] || null,
-      status: params[3] || 'success',
-      details: params[4] || null,
-      ip: params[5] || null,
-      timestamp: Math.floor(Date.now() / 1000)
-    };
-    store.audit_logs.push(log);
-    saveData();
-    return { changes: 1, lastInsertRowid: log.id };
-  }
-  
-  // SELECT FROM system_settings
-  if (sql.includes('SELECT value FROM system_settings')) {
-    if (sql.includes('WHERE key = ?')) {
-      const value = store.system_settings[params[0]];
-      return value ? [{ value }] : [];
-    }
-    return Object.entries(store.system_settings).map(([key, value]) => ({ key, value }));
-  }
-  
-  // SELECT * FROM audit_logs
-  if (sql.includes('SELECT * FROM audit_logs')) {
-    let logs = [...store.audit_logs];
-    logs.sort((a, b) => b.timestamp - a.timestamp);
-    if (sql.includes('LIMIT')) {
-      const limit = parseInt(sql.match(/LIMIT\s+(\d+)/)?.[1] || 50);
-      logs = logs.slice(0, limit);
-    }
-    return logs;
-  }
-  
-  // SELECT COUNT(*) FROM audit_logs
-  if (sql.includes('SELECT COUNT(*) as count FROM audit_logs')) {
-    return [{ count: store.audit_logs.length }];
-  }
-  
-  // DELETE FROM audit_logs
-  if (sql.includes('DELETE FROM audit_logs')) {
-    if (sql.includes('WHERE timestamp <')) {
-      const timestamp = parseInt(params[0]);
-      const before = store.audit_logs.length;
-      store.audit_logs = store.audit_logs.filter(log => log.timestamp >= timestamp);
-      const deleted = before - store.audit_logs.length;
-      saveData();
-      return { changes: deleted };
-    }
-    store.audit_logs = [];
-    saveData();
-    return { changes: 1 };
-  }
-  
-  // INSERT INTO bots
   if (sql.includes('INSERT INTO bots')) {
     const bot = {
       id: params[0] || uuidv4(),
@@ -321,8 +176,6 @@ export const run = async (sql, params = []) => {
     saveData();
     return { changes: 1, lastInsertRowid: bot.id };
   }
-  
-  // UPDATE bots
   if (sql.includes('UPDATE bots SET')) {
     const id = params[params.length - 1];
     const bot = store.bots.find(b => b.id === id);
@@ -334,8 +187,6 @@ export const run = async (sql, params = []) => {
     }
     return { changes: 0 };
   }
-  
-  // DELETE FROM bots
   if (sql.includes('DELETE FROM bots')) {
     const id = params[0];
     const index = store.bots.findIndex(b => b.id === id);
@@ -346,12 +197,30 @@ export const run = async (sql, params = []) => {
     }
     return { changes: 0 };
   }
-  
+  if (sql.includes('INSERT INTO audit_logs')) {
+    const log = {
+      id: store._nextIds.audit_logs++,
+      user_id: params[0] || null,
+      action: params[1],
+      target: params[2] || null,
+      status: params[3] || 'success',
+      details: params[4] || null,
+      ip: params[5] || null,
+      timestamp: Math.floor(Date.now() / 1000)
+    };
+    store.audit_logs.push(log);
+    saveData();
+    return { changes: 1, lastInsertRowid: log.id };
+  }
+  if (sql.includes('DELETE FROM audit_logs')) {
+    store.audit_logs = [];
+    saveData();
+    return { changes: 1 };
+  }
   return { changes: 0 };
 };
 
 export const query = async (sql, params = []) => {
-  // SELECT * FROM users
   if (sql.includes('SELECT * FROM users')) {
     if (sql.includes('WHERE username = ?')) {
       const user = store.users.find(u => u.username === params[0]);
@@ -361,48 +230,18 @@ export const query = async (sql, params = []) => {
       const user = store.users.find(u => u.id === params[0]);
       return user ? [user] : [];
     }
-    if (sql.includes('WHERE role = ?')) {
-      return store.users.filter(u => u.role === params[0]);
-    }
     return store.users;
   }
-  
-  // SELECT COUNT(*) FROM users
   if (sql.includes('SELECT COUNT(*) as count FROM users')) {
     return [{ count: store.users.length }];
   }
-  
-  // SELECT * FROM bots
   if (sql.includes('SELECT * FROM bots')) {
     if (sql.includes('WHERE id = ?')) {
       const bot = store.bots.find(b => b.id === params[0]);
       return bot ? [bot] : [];
     }
-    if (sql.includes('WHERE owner_id = ?')) {
-      return store.bots.filter(b => b.owner_id === params[0]);
-    }
     return store.bots;
   }
-  
-  // SELECT * FROM bot_sessions
-  if (sql.includes('SELECT * FROM bot_sessions')) {
-    if (sql.includes('WHERE bot_id = ?')) {
-      const session = store.bot_sessions.find(s => s.bot_id === params[0]);
-      return session ? [session] : [];
-    }
-    return store.bot_sessions;
-  }
-  
-  // SELECT FROM system_settings
-  if (sql.includes('SELECT value FROM system_settings')) {
-    if (sql.includes('WHERE key = ?')) {
-      const value = store.system_settings[params[0]];
-      return value ? [{ value }] : [];
-    }
-    return Object.entries(store.system_settings).map(([key, value]) => ({ key, value }));
-  }
-  
-  // SELECT * FROM audit_logs
   if (sql.includes('SELECT * FROM audit_logs')) {
     let logs = [...store.audit_logs];
     logs.sort((a, b) => b.timestamp - a.timestamp);
@@ -412,12 +251,13 @@ export const query = async (sql, params = []) => {
     }
     return logs;
   }
-  
-  // SELECT FROM sqlite_master
-  if (sql.includes('SELECT name FROM sqlite_master')) {
-    return [{ name: 'users' }, { name: 'bots' }, { name: 'audit_logs' }];
+  if (sql.includes('SELECT value FROM system_settings')) {
+    if (sql.includes('WHERE key = ?')) {
+      const value = store.system_settings[params[0]];
+      return value ? [{ value }] : [];
+    }
+    return Object.entries(store.system_settings).map(([key, value]) => ({ key, value }));
   }
-  
   return [];
 };
 
@@ -435,14 +275,8 @@ export const setSetting = async (key, value) => {
   saveData();
 };
 
-export const getBots = async () => {
-  return store.bots;
-};
-
-export const getBot = async (id) => {
-  return store.bots.find(b => b.id === id) || null;
-};
-
+export const getBots = async () => store.bots;
+export const getBot = async (id) => store.bots.find(b => b.id === id) || null;
 export const createBot = async (data) => {
   const bot = {
     id: data.id || uuidv4(),
@@ -479,7 +313,6 @@ export const createBot = async (data) => {
 export const updateBot = async (id, data) => {
   const bot = store.bots.find(b => b.id === id);
   if (!bot) return null;
-  
   Object.assign(bot, data);
   bot.updated_at = Math.floor(Date.now() / 1000);
   saveData();
@@ -489,68 +322,15 @@ export const updateBot = async (id, data) => {
 export const deleteBot = async (id) => {
   const index = store.bots.findIndex(b => b.id === id);
   if (index === -1) return false;
-  
   store.bots.splice(index, 1);
   saveData();
   return true;
 };
 
-// ============ USER HELPERS ============
-export const getUsers = async () => {
-  return store.users;
-};
+export const getUsers = async () => store.users;
+export const getUser = async (id) => store.users.find(u => u.id === id) || null;
+export const getUserByUsername = async (username) => store.users.find(u => u.username === username) || null;
 
-export const getUser = async (id) => {
-  return store.users.find(u => u.id === id) || null;
-};
-
-export const getUserByUsername = async (username) => {
-  return store.users.find(u => u.username === username) || null;
-};
-
-export const createUser = async (data) => {
-  const user = {
-    id: store._nextIds.users++,
-    username: data.username,
-    password_hash: data.password_hash,
-    display_name: data.display_name || data.username,
-    email: data.email || null,
-    role: data.role || 'user',
-    status: 'active',
-    last_active: Math.floor(Date.now() / 1000),
-    created_at: Math.floor(Date.now() / 1000),
-    updated_at: Math.floor(Date.now() / 1000)
-  };
-  store.users.push(user);
-  saveData();
-  return user;
-};
-
-export const updateUser = async (id, data) => {
-  const user = store.users.find(u => u.id === id);
-  if (!user) return null;
-  
-  Object.assign(user, data);
-  user.updated_at = Math.floor(Date.now() / 1000);
-  saveData();
-  return user;
-};
-
-export const deleteUser = async (id) => {
-  const index = store.users.findIndex(u => u.id === id);
-  if (index === -1) return false;
-  
-  const admins = store.users.filter(u => u.role === 'admin');
-  if (store.users[index].role === 'admin' && admins.length <= 1) {
-    throw new Error('Cannot delete last admin');
-  }
-  
-  store.users.splice(index, 1);
-  saveData();
-  return true;
-};
-
-// ============ AUDIT LOG HELPERS ============
 export const addAuditLog = async (data) => {
   const { user_id, action, target, status, details, ip } = data;
   await run(
@@ -561,39 +341,13 @@ export const addAuditLog = async (data) => {
 };
 
 export const getAuditLogs = async (limit = 50) => {
-  const logs = await query(`SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT ${limit}`);
-  return logs || [];
-};
-
-export const clearAuditLogs = async (days = 30) => {
-  const cutoff = Math.floor(Date.now() / 1000) - (days * 24 * 60 * 60);
-  await run('DELETE FROM audit_logs WHERE timestamp < ?', [cutoff]);
-  return true;
+  return await query(`SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT ${limit}`);
 };
 
 export default { 
-  initDB,
-  getDb, 
-  saveDb,
-  migrate, 
-  seedData,
-  run, 
-  query, 
-  queryOne, 
-  getSetting, 
-  setSetting,
-  getBots,
-  getBot,
-  createBot,
-  updateBot,
-  deleteBot,
-  getUsers,
-  getUser,
-  getUserByUsername,
-  createUser,
-  updateUser,
-  deleteUser,
-  addAuditLog,
-  getAuditLogs,
-  clearAuditLogs
+  initDB, getDb, saveDb, migrate, seedData,
+  run, query, queryOne, getSetting, setSetting,
+  getBots, getBot, createBot, updateBot, deleteBot,
+  getUsers, getUser, getUserByUsername,
+  addAuditLog, getAuditLogs
 };
