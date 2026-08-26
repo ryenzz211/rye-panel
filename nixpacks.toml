@@ -9,3 +9,7 @@ cmds = ["echo 'Build completed'"]
 
 [phases.start]
 cmds = ["node backend/server.js"]
+
+[build.env]
+NODE_ENV = "production"
+PORT = "3000"

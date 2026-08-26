@@ -5,9 +5,6 @@ import bcrypt from 'bcrypt';
 
 const DB_PATH = process.env.DB_PATH || './data/database/rye.db';
 const FULL_DB_PATH = path.resolve(process.cwd(), DB_PATH);
-
-console.log('[DB] Path:', FULL_DB_PATH);
-
 const dbDir = path.dirname(FULL_DB_PATH);
 fs.ensureDirSync(dbDir);
 
@@ -344,7 +341,7 @@ export const getAuditLogs = async (limit = 50) => {
   return await query(`SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT ${limit}`);
 };
 
-export default { 
+export default {
   initDB, getDb, saveDb, migrate, seedData,
   run, query, queryOne, getSetting, setSetting,
   getBots, getBot, createBot, updateBot, deleteBot,

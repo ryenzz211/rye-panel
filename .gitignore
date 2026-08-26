@@ -1,12 +1,5 @@
 node_modules/
-data/
-logs/
-.env
-.DS_Store
+data/bots/*/session/
+data/uploads/
 *.log
-*.db
-*.zip
-*.tar.gz
-backups/
-uploads/
-session/
+package-lock.json
